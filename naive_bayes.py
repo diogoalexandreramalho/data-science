@@ -13,8 +13,8 @@ def simple_naive_bayes(trnX, tstX, trnY, tstY, labels):
     prdY = nb.predict(tstX)
     accuracy = metrics.accuracy_score(tstY, prdY)
 
-    cnf_matrix = metrics.confusion_matrix(tstY, prdY, labels)
-    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels).ravel()
+    cnf_matrix = metrics.confusion_matrix(tstY, prdY, labels=labels)
+    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels=labels).ravel()
     specificity = tp/(tp+fn)
 
     return accuracy, specificity, cnf_matrix
@@ -28,7 +28,7 @@ def simple_naive_bayes_CT(trnX, tstX, trnY, tstY, labels):
     prdY = nb.predict(tstX)
     accuracy = metrics.accuracy_score(tstY, prdY)
 
-    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
     
     return accuracy, cnf_mtx
 
@@ -41,7 +41,7 @@ def naive_bayes_CT(trnX, tstX, trnY, tstY, labels):
     prdY = nb.predict(tstX)
     
     accuracy = metrics.accuracy_score(tstY, prdY)
-    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
     
     best_accuracy = [('GaussianNB'), accuracy, cnf_mtx]
     
@@ -68,11 +68,11 @@ def naive_bayes(trnX, tstX, trnY, tstY, labels, plot):
         accuracy = metrics.accuracy_score(tstY, prdY)
         accuracy_values.append(accuracy)
 
-        tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels).ravel()
+        tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels=labels).ravel()
         specificity = tp/(tp+fn)
         specificity_values.append(specificity)
 
-        cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+        cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
 
         if accuracy > max_accuracy:
             best_accuracy = [(clf), accuracy, specificity, cnf_mtx]

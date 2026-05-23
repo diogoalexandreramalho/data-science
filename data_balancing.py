@@ -55,7 +55,7 @@ def balance_SMOTE(data, strategy: str, plot, random_state=42):
     smote = SMOTE(sampling_strategy=strategy, random_state=random_state)
     y = data.pop('class').values
     X = data.values
-    smote_X, smote_y = smote.fit_sample(X, y)
+    smote_X, smote_y = smote.fit_resample(X, y)
     smote_target_count = pd.Series(smote_y).value_counts()
     values['SMOTE'] = [smote_target_count.values[ind_min_class], smote_target_count.values[1 - ind_min_class]]
     

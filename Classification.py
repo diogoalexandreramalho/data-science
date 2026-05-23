@@ -25,8 +25,9 @@ def classification(data, source):
         target = 'class'
 
     # split data set in target variable and atributes
-    y: np.ndarray = data.pop(target).values
-    X: np.ndarray = data.values
+    data = data.apply(pd.to_numeric)
+    y: np.ndarray = data.pop(target).values.astype(int)
+    X: np.ndarray = data.values.astype(float)
     labels: np.ndarray = pd.unique(y)
 
     # store accuracies and sensitivities for each classifier
@@ -43,7 +44,7 @@ def classification(data, source):
         cnf_mtxs_temp = [c_m, c_m, c_m, c_m, c_m, c_m]
         cnf_mtxs = [c_m, c_m, c_m, c_m, c_m, c_m]
 
-    cv = KFold(n_splits=10, random_state=42, shuffle=False)
+    cv = KFold(n_splits=10, random_state=42, shuffle=True)
 
     for train_index, test_index in cv.split(X):
         

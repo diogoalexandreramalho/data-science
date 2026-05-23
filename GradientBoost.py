@@ -15,8 +15,8 @@ def simple_gradient_boost(trnX, tstX, trnY, tstY, n, l, d, f, labels):
     prdY = gb.predict(tstX)
     accuracy = metrics.accuracy_score(tstY, prdY)
 
-    cnf_matrix = metrics.confusion_matrix(tstY, prdY, labels)
-    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels).ravel()
+    cnf_matrix = metrics.confusion_matrix(tstY, prdY, labels=labels)
+    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels=labels).ravel()
     specificity = tp/(tp+fn)
 
     return accuracy, specificity, cnf_matrix
@@ -30,7 +30,7 @@ def simple_gradient_boost_CT(trnX, tstX, trnY, tstY, n, l, d, f, labels):
     prdY = gb.predict(tstX)
     
     accuracy = metrics.accuracy_score(tstY, prdY)
-    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
     
     return accuracy, cnf_mtx
 
@@ -63,7 +63,7 @@ def gradient_boost_CT(trnX, tstX, trnY, tstY, labels, plot):
 
                     accuracy = metrics.accuracy_score(tstY, prdY)
 
-                    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+                    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
 
                     if accuracy > max_accuracy:
                         best_accuracy = [(f, d, n, l), accuracy, cnf_mtx]
@@ -120,10 +120,10 @@ def gradient_boost(trnX, tstX, trnY, tstY, labels, plot):
 
                     accuracy = metrics.accuracy_score(tstY, prdY)
 
-                    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels).ravel()
+                    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels=labels).ravel()
                     specificity = tp/(tp+fn)
 
-                    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+                    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
 
                     if accuracy > max_accuracy:
                         best_accuracy = [(f, d, n, l), accuracy, specificity, cnf_mtx]

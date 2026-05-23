@@ -15,8 +15,8 @@ def simple_decision_tree(trnX, tstX, trnY, tstY, n, d, f, labels):
     prdY = dt.predict(tstX)
     accuracy = metrics.accuracy_score(tstY, prdY)
 
-    cnf_matrix = metrics.confusion_matrix(tstY, prdY, labels)
-    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels).ravel()
+    cnf_matrix = metrics.confusion_matrix(tstY, prdY, labels=labels)
+    tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels=labels).ravel()
     specificity = tp/(tp+fn)
 
     return accuracy, specificity, cnf_matrix
@@ -30,7 +30,7 @@ def simple_decision_tree_CT(trnX, tstX, trnY, tstY, n, d, f, labels):
     prdY = dt.predict(tstX)
 
     accuracy = metrics.accuracy_score(tstY, prdY)
-    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+    cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
     
     return accuracy, cnf_mtx
 
@@ -61,7 +61,7 @@ def decision_tree_CT(trnX, tstX, trnY, tstY, labels, plot, png):
                 accuracy = metrics.accuracy_score(tstY, prdY)
                 accuracy_values.append(accuracy)
 
-                cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+                cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
 
                 if accuracy > max_accuracy:
                     best_accuracy = [(f, d, n), accuracy, cnf_mtx]
@@ -125,11 +125,11 @@ def decision_tree(trnX, tstX, trnY, tstY, labels, plot, png):
                 accuracy_values.append(accuracy)
 
                 # sensitivity for criteria = f, max_depth = d, min_samples_leaf = n
-                tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels).ravel()
+                tn, fp, fn, tp = metrics.confusion_matrix(tstY, prdY, labels=labels).ravel()
                 specificity = tp/(tp+fn)
                 specificity_values.append(specificity)
 
-                cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels)
+                cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
 
                 if accuracy > max_accuracy:
                     best_accuracy = [(f, d, n), accuracy, specificity, cnf_mtx]
