@@ -3,17 +3,17 @@ import pandas as pd
 import math
 import sklearn.metrics as metrics
 import matplotlib.pyplot as plt
-import plot_functions as func
+from data_science.viz import plots as func
 
 from pandas.plotting import register_matplotlib_converters
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE, RandomOverSampler
 
-import data_balancing as balance
-import Normalize as norm
-import naive_bayes as nb
-import KNN as knn
-import Decision_Tree as dt
+from data_science.preprocessing import data_balancing as balance
+from data_science.preprocessing import normalize as norm
+from data_science.models import naive_bayes as nb
+from data_science.models import knn
+from data_science.models import decision_tree as dt
 
 from sklearn.datasets import make_classification
 from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
