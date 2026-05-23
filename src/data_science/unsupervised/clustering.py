@@ -29,7 +29,7 @@ def run(source, data):
         target = "Cover_Type"
 
     data_norm = norm.normalization(source, data)
-    y = data_norm.pop(target).values
+    data_norm.pop(target).values
     X = data_norm.values
 
     visualizer = KElbowVisualizer(cluster.KMeans(), k=(1, 12))
@@ -74,12 +74,12 @@ def statistics(source, data):
     fig = plt.figure()
     ax = p3.Axes3D(fig)
     ax.view_init(7, -80)
-    for l in np.unique(y_pred):
+    for label in np.unique(y_pred):
         ax.scatter(
-            X[y_pred == l, 0],
-            X[y_pred == l, 1],
-            X[y_pred == l, 2],
-            color=plt.cm.jet(float(l) / np.max(y_pred + 1)),
+            X[y_pred == label, 0],
+            X[y_pred == label, 1],
+            X[y_pred == label, 2],
+            color=plt.cm.jet(float(label) / np.max(y_pred + 1)),
             s=20,
             edgecolor="k",
         )

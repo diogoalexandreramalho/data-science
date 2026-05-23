@@ -5,9 +5,9 @@ from sklearn.ensemble import GradientBoostingClassifier
 from data_science.viz import plots as func
 
 
-def simple_gradient_boost(trnX, tstX, trnY, tstY, n, l, d, f, labels):
+def simple_gradient_boost(trnX, tstX, trnY, tstY, n, lr, d, f, labels):
 
-    gb = GradientBoostingClassifier(n_estimators=n, learning_rate=l, max_depth=d, max_features=f)
+    gb = GradientBoostingClassifier(n_estimators=n, learning_rate=lr, max_depth=d, max_features=f)
     gb.fit(trnX, trnY)
     prdY = gb.predict(tstX)
     accuracy = metrics.accuracy_score(tstY, prdY)
@@ -19,9 +19,9 @@ def simple_gradient_boost(trnX, tstX, trnY, tstY, n, l, d, f, labels):
     return accuracy, specificity, cnf_matrix
 
 
-def simple_gradient_boost_CT(trnX, tstX, trnY, tstY, n, l, d, f, labels):
+def simple_gradient_boost_CT(trnX, tstX, trnY, tstY, n, lr, d, f, labels):
 
-    gb = GradientBoostingClassifier(n_estimators=n, learning_rate=l, max_depth=d, max_features=f)
+    gb = GradientBoostingClassifier(n_estimators=n, learning_rate=lr, max_depth=d, max_features=f)
     gb.fit(trnX, trnY)
     prdY = gb.predict(tstX)
 
@@ -50,9 +50,9 @@ def gradient_boost_CT(trnX, tstX, trnY, tstY, labels, plot):
             for n in n_estimators:
                 max_learning_accuracy = 0
 
-                for l in lr_list:
+                for lr in lr_list:
                     gb = GradientBoostingClassifier(
-                        n_estimators=n, learning_rate=l, max_depth=d, max_features=f
+                        n_estimators=n, learning_rate=lr, max_depth=d, max_features=f
                     )
                     gb.fit(trnX, trnY)
                     prdY = gb.predict(tstX)
@@ -62,7 +62,7 @@ def gradient_boost_CT(trnX, tstX, trnY, tstY, labels, plot):
                     cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
 
                     if accuracy > max_accuracy:
-                        best_accuracy = [(f, d, n, l), accuracy, cnf_mtx]
+                        best_accuracy = [(f, d, n, lr), accuracy, cnf_mtx]
                         max_accuracy = accuracy
 
                     if accuracy > max_learning_accuracy:
@@ -76,7 +76,7 @@ def gradient_boost_CT(trnX, tstX, trnY, tstY, labels, plot):
             axs[0, k],
             n_estimators,
             acc_values,
-            "Gradient Boost with %s features" % f,
+            f"Gradient Boost with {f} features",
             "nr estimators",
             "accuracy",
             percentage=True,
@@ -111,9 +111,9 @@ def gradient_boost(trnX, tstX, trnY, tstY, labels, plot):
                 max_learning_accuracy = 0
                 max_learning_specificity = 0
 
-                for l in lr_list:
+                for lr in lr_list:
                     gb = GradientBoostingClassifier(
-                        n_estimators=n, learning_rate=l, max_depth=d, max_features=f
+                        n_estimators=n, learning_rate=lr, max_depth=d, max_features=f
                     )
                     gb.fit(trnX, trnY)
                     prdY = gb.predict(tstX)
@@ -126,11 +126,11 @@ def gradient_boost(trnX, tstX, trnY, tstY, labels, plot):
                     cnf_mtx = metrics.confusion_matrix(tstY, prdY, labels=labels)
 
                     if accuracy > max_accuracy:
-                        best_accuracy = [(f, d, n, l), accuracy, specificity, cnf_mtx]
+                        best_accuracy = [(f, d, n, lr), accuracy, specificity, cnf_mtx]
                         max_accuracy = accuracy
 
                     if specificity > max_specificity:
-                        best_specificity = [(f, d, n, l), accuracy, specificity, cnf_mtx]
+                        best_specificity = [(f, d, n, lr), accuracy, specificity, cnf_mtx]
                         max_specificity = specificity
 
                     if accuracy > max_learning_accuracy:
@@ -145,13 +145,14 @@ def gradient_boost(trnX, tstX, trnY, tstY, labels, plot):
             acc_values[d] = accuracy_values
             spec_values[d] = specificity_values
 
-        """func.multiple_line_chart(axs[0, k], n_estimators, acc_values, 'Gradient Boost with %s features'%f, 'nr estimators', 
+        """func.multiple_line_chart(axs[0, k], n_estimators, acc_values,
+                                 'Gradient Boost with %s features'%f, 'nr estimators',
                                  'accuracy', percentage=True)"""
         func.multiple_line_chart(
             axs[0, k],
             n_estimators,
             spec_values,
-            "Gradient Boost with %s features" % f,
+            f"Gradient Boost with {f} features",
             "nr estimators",
             "specificity",
             percentage=True,

@@ -31,7 +31,7 @@ def balance_analysis(dataset, name):
     data = dataset.copy()
     # Prepare data
     if name == "PD":  # Pd_dataset
-        data_class = data["class"]  # Save the class for later
+        data["class"]  # Save the class for later
         data.pop("id")
         y = data.pop("class").values
         X = data.values
@@ -70,7 +70,7 @@ def normalize_analysis(dataset, name):
     data = dataset.copy()
     # Prepare data
     if name == "PD":  # Pd_dataset
-        data_class = data["class"]  # Save the class for later
+        data["class"]  # Save the class for later
         data.pop("id")
         y = data.pop("class").values
         X = data.values
@@ -111,7 +111,7 @@ def feature_selection_analysis(dataset, name):
     data = dataset.copy()
     # Prepare data
     if name == "PD":  # Pd_dataset
-        data_class = data["class"]  # Save the class for later
+        data["class"]  # Save the class for later
         data.pop("id")
         y = data.pop("class").values
         X = data.values
@@ -601,7 +601,8 @@ def plot_feature_selection(xaxis, y1axis, y2axis, clf, algorithm):
 
 def compareFeatures(result):
     print(
-        "Comparing Features: SelectKBest (n_features) | SelectPercentile (%_features) | Wrapper (n_features) |"
+        "Comparing Features: SelectKBest (n_features) | "
+        "SelectPercentile (%_features) | Wrapper (n_features) |"
     )
     r = "\t\t\t"
     for feat in result.values():

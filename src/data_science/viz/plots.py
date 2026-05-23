@@ -102,7 +102,7 @@ def boxplot(group_data, y_min, y_max, data):
     fig, axs = plt.subplots(rows, cols, figsize=(cols * 4, rows * 4), squeeze=False)
     i, j = 0, 0
     for n in range(len(columns)):
-        axs[i, j].set_title("Boxplot for %s" % columns[n])
+        axs[i, j].set_title(f"Boxplot for {columns[n]}")
         if y_min - y_max != 0:
             axs[i, j].set_ylim(y_min, y_max)
         axs[i, j].boxplot(data[columns[n]].dropna().values)

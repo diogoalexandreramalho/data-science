@@ -10,7 +10,7 @@ def report(source, dataframe, task):
 
     print(dataframe)
     """task = task[:-1]
-    
+
     dataframe.insert(755, 'class', 0)
     i = 0
     for value in dataframe['class\r']:

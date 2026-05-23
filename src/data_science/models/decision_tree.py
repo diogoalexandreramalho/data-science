@@ -83,7 +83,7 @@ def decision_tree_CT(trnX, tstX, trnY, tstY, labels, plot, png):
             axs[0, k],
             min_samples_leaf,
             acc_values,
-            "Decision Trees with %s criteria" % f,
+            f"Decision Trees with {f} criteria",
             "min samples leaf",
             "accuracy",
             percentage=True,
@@ -99,7 +99,7 @@ def decision_tree_CT(trnX, tstX, trnY, tstY, labels, plot, png):
             criterion=best_accuracy[0][0],
         )
 
-        dot_data = export_graphviz(
+        export_graphviz(
             tree, out_file="dtree.dot", filled=True, rounded=True, special_characters=True
         )
         # Convert to png
@@ -158,13 +158,14 @@ def decision_tree(trnX, tstX, trnY, tstY, labels, plot, png):
             acc_values[d] = accuracy_values
             spec_values[d] = specificity_values
 
-        """func.multiple_line_chart(axs[0, k], min_samples_leaf, acc_values, 'Decision Trees with %s criteria'%f, 'min samples leaf', 
+        """func.multiple_line_chart(axs[0, k], min_samples_leaf, acc_values,
+                                 'Decision Trees with %s criteria'%f, 'min samples leaf',
                                  'accuracy', percentage=True)"""
         func.multiple_line_chart(
             axs[0, k],
             min_samples_leaf,
             spec_values,
-            "Decision Trees with %s criteria" % f,
+            f"Decision Trees with {f} criteria",
             "min samples leaf",
             "specificity",
             percentage=True,
@@ -180,7 +181,7 @@ def decision_tree(trnX, tstX, trnY, tstY, labels, plot, png):
             criterion=best_accuracy[0],
         )
 
-        dot_data = export_graphviz(
+        export_graphviz(
             tree, out_file="dtree.dot", filled=True, rounded=True, special_characters=True
         )
         # Convert to png

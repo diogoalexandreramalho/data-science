@@ -7,7 +7,7 @@ def feature_selection(dataset, name):
     data = dataset.copy()
     # Prepare data
     if name == "PD":  # Pd_dataset
-        data_class = data["class"]  # Save the class for later
+        data["class"]  # Save the class for later
         data.pop("id")  # Remove id, because we don't care, maybe remove at the begining
         y = data.pop("class").values
         X = data.values
@@ -32,7 +32,7 @@ def feature_selection(dataset, name):
         return new_data
 
     else:  # Cover_Type
-        data_class = data["Cover_Type"]
+        data["Cover_Type"]
         y = data.pop("Cover_Type")
         X = data.values
 

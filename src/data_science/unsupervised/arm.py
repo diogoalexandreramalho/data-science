@@ -41,7 +41,7 @@ def run(source, data, group=None):
         i = 0
         features_selected_list = []
         for col in data.columns:
-            if features_selected_bool[i] == True:
+            if features_selected_bool[i]:
                 features_selected_list.append(col)
             i += 1
 
@@ -69,7 +69,7 @@ def run(source, data, group=None):
             i += 1
         print(newdf)
 
-    # Dummify - for each nominal variable , create additional variables for each possible nominal value
+    # Dummify - for each nominal variable, create additional variables for each possible value
     dummylist = []
     for att in newdf:
         dummylist.append(pd.get_dummies(newdf[[att]]))
@@ -86,7 +86,6 @@ def run(source, data, group=None):
     avg_lift_list = []
     avg_leverage_list = []
     number_of_rules = []
-    avg_top_rules_list = []
     minsup_list = [0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17, 0.2, 0.22]
     for sup in minsup_list:
         frequent_itemsets = apriori(dummified_df, min_support=sup, use_colnames=True)
