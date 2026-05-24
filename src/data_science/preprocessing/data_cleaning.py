@@ -1,13 +1,11 @@
 import json
 import re
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
-
+from data_science.datasets import DATASETS
 
 """register_matplotlib_converters()
 data = pd.read_csv('Data/covtype.csv', sep=',', decimal='.')
@@ -17,17 +15,7 @@ print(data)"""
 
 # Creates a dic with a list of columns names associated to the titles given in the csv file
 def general_dic(write_file):
-    data2 = pd.read_csv(DATA_DIR / "raw" / "pd_speech_features.csv", sep=",", decimal=".")
-    dic = {"Start": []}
-    current_title = "Start"
-
-    for title in data2:
-        x = re.findall("^Unnamed", title)
-        if x:
-            dic[current_title] += [data2[title][0]]
-        else:
-            dic[title] = [data2[title][0]]
-            current_title = title
+    dic = DATASETS["PD"].feature_groups
 
     if write_file:
         with open("dic.txt", "w") as file:

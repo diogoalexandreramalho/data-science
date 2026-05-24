@@ -1,22 +1,17 @@
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from mlxtend.frequent_patterns import apriori, association_rules  # for ARM
 from sklearn.feature_selection import SelectKBest, f_classif
 
+from data_science.datasets import DATASETS
 from data_science.viz import plots as func
-
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
 
 
 def run(source, data, group=None):
 
-    dataPD = pd.read_csv(
-        DATA_DIR / "raw" / "pd_speech_features.csv", sep=",", decimal=".", skiprows=1
-    )
-    dataCT = pd.read_csv(DATA_DIR / "raw" / "covtype_test.data", sep=",", decimal=".")
+    dataPD = DATASETS["PD"].read()
+    dataCT = DATASETS["CT"].read()
 
     if source == "PD":
         target = "class"

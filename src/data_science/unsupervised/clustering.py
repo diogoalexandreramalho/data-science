@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 import numpy as np
@@ -9,17 +7,14 @@ from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.metrics import adjusted_rand_score
 from yellowbrick.cluster import KElbowVisualizer
 
+from data_science.datasets import DATASETS
 from data_science.preprocessing import normalize as norm
-
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
 
 
 def run(source, data):
 
-    dataPD = pd.read_csv(
-        DATA_DIR / "raw" / "pd_speech_features.csv", sep=",", decimal=".", skiprows=1
-    )
-    dataCT = pd.read_csv(DATA_DIR / "raw" / "covtype_test.data", sep=",", decimal=".")
+    dataPD = DATASETS["PD"].read()
+    dataCT = DATASETS["CT"].read()
 
     if source == "PD":
         target = "class"

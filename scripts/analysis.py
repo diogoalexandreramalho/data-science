@@ -1,17 +1,15 @@
 import datetime
 import time
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from data_science.datasets import DATASETS
 from data_science.models import xgboost_clf as xgb
 from data_science.preprocessing import data_balancing as balance
 from data_science.preprocessing import normalize as norm
 from data_science.viz import print_statistics as stats
-
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 
 def classification(data, source, analysis):
@@ -85,8 +83,7 @@ def classification(data, source, analysis):
 
 def produce_analysis():
 
-    # data = pd.read_csv('Data/pd_speech_features.csv', sep=',', decimal='.', skiprows=1)
-    data = pd.read_csv(DATA_DIR / "raw" / "covtype.csv", sep=",", decimal=".")
+    data = DATASETS["CT"].read()
 
     classification(data, "CT", True)
 
