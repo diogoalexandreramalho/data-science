@@ -1,5 +1,0 @@
-Fazer download do fenix dos ficheiros *.tsv
-
-cat /tmp/listadealunos_iaed_12-10-2012.tsv | cut -f 6,7 | tr '\t' ' ' | sort -n | grep -v ^N | ./join_groups_al.pl > team.al.lst
-cat /tmp/listadealunos_iaed2_12-10-2012.tsv | cut -f 6,7 | tr '\t' ' ' | sort -n | grep -v ^N | ./join_groups_tp.pl > team.tp.lst
-cat team.al.lst team.tp.lst >> /home/mooshak/data/contests/iaed_proj1_1_1415/groups/team.lst
