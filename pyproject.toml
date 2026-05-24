@@ -39,3 +39,4 @@ select = ["E", "F", "W", "I", "UP"]
 [tool.ruff.lint.per-file-ignores]
 "src/data_science/viz/print_statistics.py" = ["E501"]  # alignment-sensitive matrix printing
 "src/data_science/preprocessing/data_cleaning.py" = ["E501"]  # exploratory script with tab indentation
+"src/data_science/pipeline.py" = ["E501"]  # aligned classifier-config tables
