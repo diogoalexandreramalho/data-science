@@ -30,7 +30,7 @@ class Dataset(ABC):
     source_code: str
     filename: str
     target_column: str
-    URL: str
+    url: str
 
     @property
     def raw_path(self) -> Path:
@@ -44,7 +44,7 @@ class Dataset(ABC):
 
     def _fetch(self, dest: Path, insecure: bool) -> None:
         ctx = ssl._create_unverified_context() if insecure else None
-        with urllib.request.urlopen(self.URL, context=ctx) as r, dest.open("wb") as f:
+        with urllib.request.urlopen(self.url, context=ctx) as r, dest.open("wb") as f:
             shutil.copyfileobj(r, f)
 
 
@@ -53,10 +53,10 @@ class Covertype(Dataset):
     source_code = "CT"
     filename = "covtype.csv"
     target_column = "Cover_Type"
-    URL = "https://archive.ics.uci.edu/static/public/31/covertype.zip"
+    url = "https://archive.ics.uci.edu/static/public/31/covertype.zip"
 
     # UCI ships the data headerless; names come from covtype.info in the same zip.
-    COLUMNS = (
+    column_names = (
         [
             "Elevation",
             "Aspect",
@@ -86,7 +86,7 @@ class Covertype(Dataset):
                 gzip.open(tmp / "covtype.data.gz", "rt") as src,
                 self.raw_path.open("w") as out,
             ):
-                out.write(",".join(self.COLUMNS) + "\n")
+                out.write(",".join(self.column_names) + "\n")
                 shutil.copyfileobj(src, out)
 
     def read(self) -> pd.DataFrame:
@@ -98,7 +98,7 @@ class Parkinsons(Dataset):
     source_code = "PD"
     filename = "pd_speech_features.csv"
     target_column = "class"
-    URL = "https://archive.ics.uci.edu/static/public/470/parkinson+s+disease+classification.zip"
+    url = "https://archive.ics.uci.edu/static/public/470/parkinson+s+disease+classification.zip"
 
     def download(self, insecure: bool = False) -> None:
         RAW_DIR.mkdir(parents=True, exist_ok=True)
