@@ -21,7 +21,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from data_science.pipeline import get_classifier
+from data_science.tasks.classify import get_classifier
 
 CLASSIFIERS = ["naive_bayes", "knn", "decision_tree"]
 
@@ -154,18 +154,12 @@ def pca_analysis(dataset, name):
             _print_row(f"{clf:14} | n_components={n:4}", acc, rec)
 
 
-def preprocessing(dataset, name):
+def run(data, source):
     """Run the full preprocessing comparison study on a dataset."""
-    balance_analysis(dataset, name)
-    normalize_analysis(dataset, name)
-    feature_selection_analysis(dataset, name)
-    if name == "PD":
-        pca_analysis(dataset, name)
+    balance_analysis(data, source)
+    normalize_analysis(data, source)
+    feature_selection_analysis(data, source)
+    if source == "PD":
+        pca_analysis(data, source)
     else:
         print("\n(PCA skipped for CT — runtime impractical at full feature count)")
-
-
-# To rerun, uncomment one of these and run `python scripts/preprocessing.py`:
-# from data_science.datasets import DATASETS
-# preprocessing(DATASETS["PD"].read(), "PD")
-# preprocessing(DATASETS["CT"].read(), "CT")

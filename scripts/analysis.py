@@ -6,9 +6,9 @@ import time
 from sklearn.model_selection import train_test_split
 
 from data_science.datasets import DATASETS
-from data_science.pipeline import CONFIGS
 from data_science.preprocessing import data_balancing as balance
 from data_science.preprocessing import normalize as norm
+from data_science.tasks.classify import CONFIGS
 from data_science.train import sweep
 
 _CONFIGS_BY_KEY = {c.key: c for c in CONFIGS}

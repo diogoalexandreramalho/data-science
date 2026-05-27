@@ -20,7 +20,7 @@ from xgboost import XGBClassifier
 from data_science.datasets import DATASETS
 from data_science.viz import print_statistics as stats
 
-_HYPERPARAMS_FILE = Path(__file__).resolve().parents[2] / "configs" / "hyperparameters.yaml"
+_HYPERPARAMS_FILE = Path(__file__).resolve().parents[3] / "configs" / "hyperparameters.yaml"
 with _HYPERPARAMS_FILE.open() as _f:
     HYPERPARAMS = yaml.safe_load(_f)
 
@@ -56,7 +56,7 @@ def get_classifier(key: str, source: str):
     return cfg.estimator_cls(**cfg.defaults(source))
 
 
-def classification(data, source):
+def run(data, source):
     target = DATASETS[source].target_column
     data = data.apply(pd.to_numeric)
     y = data.pop(target).values.astype(int)
