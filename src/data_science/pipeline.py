@@ -71,13 +71,18 @@ def classification(data, source):
 
     cv = KFold(n_splits=10, random_state=42, shuffle=True)
     for train_index, test_index in cv.split(X):
-        trnX, tstX, trnY, tstY = X[train_index], X[test_index], y[train_index], y[test_index]
-        trnX, tstX, trnY, tstY = norm.standardScaler(trnX, tstX, trnY, tstY)
-        trnX, trnY = balance.run(trnX, trnY, "all", 42, False)
+        X_train, X_test, y_train, y_test = (
+            X[train_index],
+            X[test_index],
+            y[train_index],
+            y[test_index],
+        )
+        X_train, X_test, y_train, y_test = norm.standard_scaler(X_train, X_test, y_train, y_test)
+        X_train, y_train = balance.run(X_train, y_train, "all", 42, False)
 
         for i, cfg in enumerate(CONFIGS):
             estimator = cfg.estimator_cls(**cfg.defaults(source))
-            acc, recall, cnf = train(estimator, trnX, tstX, trnY, tstY, labels)
+            acc, recall, cnf = train(estimator, X_train, X_test, y_train, y_test, labels)
             accuracies[i].append(acc)
             if recall is not None:
                 recalls[i].append(recall)

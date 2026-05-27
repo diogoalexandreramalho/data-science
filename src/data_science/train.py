@@ -4,19 +4,19 @@ import sklearn.metrics as metrics
 from sklearn.model_selection import GridSearchCV
 
 
-def train(estimator, trnX, tstX, trnY, tstY, labels):
+def train(estimator, X_train, X_test, y_train, y_test, labels):
     """Fit one estimator instance, return (accuracy, recall_or_None, confusion_matrix).
 
     Recall is computed only for binary classification (len(labels) == 2);
     multi-class returns None for that slot.
     """
-    estimator.fit(trnX, trnY)
-    prdY = estimator.predict(tstX)
-    accuracy = metrics.accuracy_score(tstY, prdY)
-    cnf_matrix = metrics.confusion_matrix(tstY, prdY, labels=labels)
+    estimator.fit(X_train, y_train)
+    y_pred = estimator.predict(X_test)
+    accuracy = metrics.accuracy_score(y_test, y_pred)
+    cnf_matrix = metrics.confusion_matrix(y_test, y_pred, labels=labels)
     recall = None
     if len(labels) == 2:
-        recall = metrics.recall_score(tstY, prdY)
+        recall = metrics.recall_score(y_test, y_pred)
     return accuracy, recall, cnf_matrix
 
 

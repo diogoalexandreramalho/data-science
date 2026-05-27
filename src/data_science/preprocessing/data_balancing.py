@@ -81,12 +81,12 @@ def balance_SMOTE(data, strategy: str, plot, random_state=42):
     return new_data
 
 
-def run(trnX, trnY, strategy: str, random_number, plot):
+def run(X_train, y_train, strategy: str, random_number, plot):
     register_matplotlib_converters()
 
     # create dataframe from training set
-    df_trnX = pd.DataFrame(trnX)
-    df_trnY = pd.DataFrame(trnY, columns=["class"])
+    df_trnX = pd.DataFrame(X_train)
+    df_trnY = pd.DataFrame(y_train, columns=["class"])
     df_trn = pd.concat([df_trnX, df_trnY], axis=1, sort=False)
 
     if plot:
@@ -98,7 +98,7 @@ def run(trnX, trnY, strategy: str, random_number, plot):
     )  # Shows Smote, and returns new_data
 
     # split training set in attributes and target
-    trnY = df_trn.pop("class").values
-    trnX = df_trn.values
+    y_train = df_trn.pop("class").values
+    X_train = df_trn.values
 
-    return trnX, trnY
+    return X_train, y_train

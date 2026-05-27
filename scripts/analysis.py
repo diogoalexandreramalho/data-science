@@ -26,14 +26,14 @@ def run_xgb_sweep(source: str) -> None:
     y = data.pop(target).values
     X = data.values
 
-    trnX, tstX, trnY, tstY = train_test_split(X, y, train_size=0.7, stratify=y)
-    trnX, tstX, trnY, tstY = norm.standardScaler(trnX, tstX, trnY, tstY)
-    trnX, trnY = balance.run(trnX, trnY, "all", 42, False)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, stratify=y)
+    X_train, X_test, y_train, y_test = norm.standard_scaler(X_train, X_test, y_train, y_test)
+    X_train, y_train = balance.run(X_train, y_train, "all", 42, False)
 
     xgb_cfg = _CONFIGS_BY_KEY["xgboost"]
 
     start = time.time()
-    result = sweep(xgb_cfg.estimator_cls, trnX, trnY, xgb_cfg.grid(source))
+    result = sweep(xgb_cfg.estimator_cls, X_train, y_train, xgb_cfg.grid(source))
     elapsed = str(datetime.timedelta(seconds=time.time() - start))
 
     print(f"=== XGBoost sweep on {source} ===")

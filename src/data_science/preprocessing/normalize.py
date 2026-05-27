@@ -1,19 +1,19 @@
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
-def standardScaler(trnX, tstX, trnY, tstY):
+def standard_scaler(X_train, X_test, y_train, y_test):
 
     scaler = StandardScaler()
-    trnX = scaler.fit_transform(trnX)
-    tstX = scaler.transform(tstX)
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
-    return trnX, tstX, trnY, tstY
+    return X_train, X_test, y_train, y_test
 
 
-def minMaxScaler(trnX, tstX, trnY, tstY):
+def min_max_scaler(X_train, X_test, y_train, y_test):
 
     scaler = MinMaxScaler()
-    trnX = scaler.fit_transform(trnX)
-    tstX = scaler.transform(tstX)
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
-    return trnX, tstX, trnY, tstY
+    return X_train, X_test, y_train, y_test

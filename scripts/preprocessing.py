@@ -46,18 +46,24 @@ def balance_analysis(dataset, name):
     specificity = []
 
     labels: np.ndarray = pd.unique(y)
-    trnX, tstX, trnY, tstY = train_test_split(X, y, train_size=0.7, stratify=y, random_state=41)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, train_size=0.7, stratify=y, random_state=41
+    )
 
     print("Balance Performance")
     for clf in classifiers:
         for bal in balance:
             if name == "PD":
-                acc, spec, conf = classify_balance(trnX, tstX, trnY, tstY, labels, clf, bal, name)
+                acc, spec, conf = classify_balance(
+                    X_train, X_test, y_train, y_test, labels, clf, bal, name
+                )
                 accuracy.append(acc)
                 specificity.append(spec)
 
             else:
-                acc, conf = classify_balance(trnX, tstX, trnY, tstY, labels, clf, bal, name)
+                acc, conf = classify_balance(
+                    X_train, X_test, y_train, y_test, labels, clf, bal, name
+                )
                 accuracy.append(acc)
 
         performance_balance(accuracy, specificity, clf, name)
@@ -80,25 +86,29 @@ def normalize_analysis(dataset, name):
         X: np.ndarray = data.values
 
     classifiers = ["Naive_Bayes", "KNN", "Decision_Tree"]
-    normalizers = ["minMaxScaler", "standardScaler", "None"]
+    normalizers = ["min_max_scaler", "standard_scaler", "None"]
     accuracy = []
     specificity = []
 
     labels: np.ndarray = pd.unique(y)
-    trnX, tstX, trnY, tstY = train_test_split(X, y, train_size=0.7, stratify=y, random_state=41)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, train_size=0.7, stratify=y, random_state=41
+    )
 
     print("Normalization Performance")
     for clf in classifiers:
         for n in normalizers:
             if name == "PD":
                 acc, spec, conf = classify_normalization(
-                    trnX, tstX, trnY, tstY, labels, clf, n, name
+                    X_train, X_test, y_train, y_test, labels, clf, n, name
                 )
                 accuracy.append(acc)
                 specificity.append(spec)
 
             else:
-                acc, conf = classify_normalization(trnX, tstX, trnY, tstY, labels, clf, n, name)
+                acc, conf = classify_normalization(
+                    X_train, X_test, y_train, y_test, labels, clf, n, name
+                )
                 accuracy.append(acc)
 
         performance_normalization(accuracy, specificity, clf, name)
@@ -316,12 +326,12 @@ def pca_analysis(dataset, name):
 #
 
 
-def classify_balance(trnX, tstX, trnY, tstY, labels, clf, bal, name):
+def classify_balance(X_train, X_test, y_train, y_test, labels, clf, bal, name):
 
-    trnX, tstX, trnY, tstY = norm.standardScaler(trnX, tstX, trnY, tstY)
+    X_train, X_test, y_train, y_test = norm.standard_scaler(X_train, X_test, y_train, y_test)
 
     if bal == "SMOTE":
-        trnX, trnY = balance.run(trnX, trnY, "all", 42, False)
+        X_train, y_train = balance.run(X_train, y_train, "all", 42, False)
 
     elif bal == "None":
         # Does nothing
@@ -330,77 +340,99 @@ def classify_balance(trnX, tstX, trnY, tstY, labels, clf, bal, name):
     # classify
     if clf == "Naive_Bayes":
         if name == "PD":
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
         else:
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
 
     elif clf == "KNN":
         if name == "PD":
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
         else:
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
 
     elif clf == "Decision_Tree":
         if name == "PD":
-            return train(get_classifier("decision_tree", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("decision_tree", name), X_train, X_test, y_train, y_test, labels
+            )
         else:
-            return train(get_classifier("decision_tree", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("decision_tree", name), X_train, X_test, y_train, y_test, labels
+            )
 
 
-def classify_normalization(trnX, tstX, trnY, tstY, labels, clf, n, name):
+def classify_normalization(X_train, X_test, y_train, y_test, labels, clf, n, name):
 
-    if n == "minMaxScaler":
-        trnX, tstX, trnY, tstY = norm.minMaxScaler(trnX, tstX, trnY, tstY)
+    if n == "min_max_scaler":
+        X_train, X_test, y_train, y_test = norm.min_max_scaler(X_train, X_test, y_train, y_test)
 
-    elif n == "standardScaler":
-        trnX, tstX, trnY, tstY = norm.standardScaler(trnX, tstX, trnY, tstY)
+    elif n == "standard_scaler":
+        X_train, X_test, y_train, y_test = norm.standard_scaler(X_train, X_test, y_train, y_test)
 
     elif n == "None":
         # Does nothing
         pass
 
-    trnX, trnY = balance.run(trnX, trnY, "all", 42, False)
+    X_train, y_train = balance.run(X_train, y_train, "all", 42, False)
 
     # classify
     if clf == "Naive_Bayes":
         if name == "PD":
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
         else:
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
 
     elif clf == "KNN":
         if name == "PD":
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
         else:
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
 
     elif clf == "Decision_Tree":
         if name == "PD":
-            return train(get_classifier("decision_tree", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("decision_tree", name), X_train, X_test, y_train, y_test, labels
+            )
         else:
-            return train(get_classifier("decision_tree", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("decision_tree", name), X_train, X_test, y_train, y_test, labels
+            )
 
 
 def classify_feature_selection(X, y, clf, name):
 
     labels: np.ndarray = pd.unique(y)
-    trnX, tstX, trnY, tstY = train_test_split(X, y, train_size=0.7, stratify=y, random_state=41)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, train_size=0.7, stratify=y, random_state=41
+    )
 
     # normalize and balance the dataset
-    trnX, tstX, trnY, tstY = norm.standardScaler(trnX, tstX, trnY, tstY)
-    trnX, trnY = balance.run(trnX, trnY, "all", 42, False)
+    X_train, X_test, y_train, y_test = norm.standard_scaler(X_train, X_test, y_train, y_test)
+    X_train, y_train = balance.run(X_train, y_train, "all", 42, False)
 
     if clf == "Naive_Bayes":
         if name == "PD":
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
         else:
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
 
     elif clf == "KNN":
         if name == "PD":
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
         else:
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
 
 
 def classify_pca(dataset, clf, name):
@@ -416,23 +448,27 @@ def classify_pca(dataset, clf, name):
         X: np.ndarray = data.values
 
     labels: np.ndarray = pd.unique(y)
-    trnX, tstX, trnY, tstY = train_test_split(X, y, train_size=0.7, stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, stratify=y)
 
     # normalize and balance the dataset
-    trnX, tstX, trnY, tstY = norm.standardScaler(trnX, tstX, trnY, tstY)
-    trnX, trnY = balance.run(trnX, trnY, "all", 42, False)
+    X_train, X_test, y_train, y_test = norm.standard_scaler(X_train, X_test, y_train, y_test)
+    X_train, y_train = balance.run(X_train, y_train, "all", 42, False)
 
     if clf == "Naive_Bayes":
         if name == "PD":
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
         else:
-            return train(get_classifier("naive_bayes", name), trnX, tstX, trnY, tstY, labels)
+            return train(
+                get_classifier("naive_bayes", name), X_train, X_test, y_train, y_test, labels
+            )
 
     elif clf == "KNN":
         if name == "PD":
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
         else:
-            return train(get_classifier("knn", name), trnX, tstX, trnY, tstY, labels)
+            return train(get_classifier("knn", name), X_train, X_test, y_train, y_test, labels)
 
 
 #
@@ -451,7 +487,7 @@ def performance_balance(accuracy, specificity, clf, name):
 
 
 def performance_normalization(accuracy, specificity, clf, name):
-    print("minMaxScaler | standardScaler | none")
+    print("min_max_scaler | standard_scaler | none")
     print("\t Using Classifier:" + clf)
     print("\t\t Accuracy: ", accuracy)
     if name == "PD":
