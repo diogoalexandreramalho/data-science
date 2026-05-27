@@ -1,53 +1,64 @@
-from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import yaml
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.model_selection import KFold
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 
 from data_science.datasets import DATASETS
-from data_science.models import decision_tree as dt
-from data_science.models import gradient_boost as gb
-from data_science.models import knn
-from data_science.models import naive_bayes as nb
-from data_science.models import random_forest as rf
-from data_science.models import xgboost_clf as xgb
 from data_science.preprocessing import data_balancing as balance
 from data_science.preprocessing import normalize as norm
+from data_science.train import train
 from data_science.viz import print_statistics as stats
+
+_SWEEPS_FILE = Path(__file__).resolve().parents[2] / "configs" / "sweeps.yaml"
+with _SWEEPS_FILE.open() as _f:
+    SWEEPS = yaml.safe_load(_f)
 
 
 @dataclass(frozen=True)
 class ClassifierConfig:
     name: str
-    fn: Callable
-    call_params: tuple = ()
-    display_params: tuple | None = None
+    estimator_cls: type
+    call_params: dict = field(default_factory=dict)
+    param_grid_key: str = ""  # keys into SWEEPS[source]
+    display_params: tuple | str | None = None
 
     @property
-    def display(self) -> tuple:
-        return self.display_params if self.display_params is not None else self.call_params
+    def display(self):
+        if self.display_params is not None:
+            return self.display_params
+        return tuple(self.call_params.values())
+
+    def param_grid(self, source: str) -> dict:
+        return SWEEPS[source].get(self.param_grid_key, {})
 
 
 # fmt: off
 # CT display_params drift from call_params on DT/RF/GB/XGB — preserved as-is from the
 # original; the printed report shows tuned values that aren't what training actually used.
 PD_CONFIGS = [
-    ClassifierConfig("Naive Bayes",       nb.simple_naive_bayes,    (),                       "GaussianNB"),
-    ClassifierConfig("kNN",               knn.simple_knn,           (1, "manhattan"),         ("manhattan", 1)),
-    ClassifierConfig("Decision Tree",     dt.simple_decision_tree,  (0.05, 5, "entropy"),     ("entropy", 5, 0.05)),
-    ClassifierConfig("Random Forest",     rf.simple_random_forest,  (150, 10, "sqrt"),        ("sqrt", 10, 150)),
-    ClassifierConfig("Gradient Boosting", gb.simple_gradient_boost, (100, 0.1, 5, "sqrt"),    ("sqrt", 5, 100, 0.1)),
-    ClassifierConfig("XGBoost",           xgb.simple_xg_boost,      (200, 5),                 (5, 200)),
+    ClassifierConfig("Naive Bayes",       GaussianNB,                  {},                                                                                   "naive_bayes",     "GaussianNB"),
+    ClassifierConfig("kNN",               KNeighborsClassifier,        {"n_neighbors": 1, "metric": "manhattan"},                                            "knn",             ("manhattan", 1)),
+    ClassifierConfig("Decision Tree",     DecisionTreeClassifier,      {"min_samples_leaf": 0.05, "max_depth": 5, "criterion": "entropy"},                   "decision_tree",   ("entropy", 5, 0.05)),
+    ClassifierConfig("Random Forest",     RandomForestClassifier,      {"n_estimators": 150, "max_depth": 10, "max_features": "sqrt"},                       "random_forest",   ("sqrt", 10, 150)),
+    ClassifierConfig("Gradient Boosting", GradientBoostingClassifier,  {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 5, "max_features": "sqrt"},  "gradient_boost",  ("sqrt", 5, 100, 0.1)),
+    ClassifierConfig("XGBoost",           XGBClassifier,               {"n_estimators": 200, "max_depth": 5},                                                "xgboost",         (5, 200)),
 ]
 
 CT_CONFIGS = [
-    ClassifierConfig("Naive Bayes",       nb.simple_naive_bayes_CT,    (),                    "GaussianNB"),
-    ClassifierConfig("kNN",               knn.simple_knn_CT,           (1, "manhattan"),      ("manhattan", 1)),
-    ClassifierConfig("Decision Tree",     dt.simple_decision_tree_CT,  (0.05, 5, "entropy"),  ("entropy", 50, 0.00005)),
-    ClassifierConfig("Random Forest",     rf.simple_random_forest_CT,  (150, 10, "sqrt"),     ("sqrt", 25, 185)),
-    ClassifierConfig("Gradient Boosting", gb.simple_gradient_boost_CT, (100, 0.1, 5, "sqrt"), ("sqrt", 10, 300, 0.05)),
-    ClassifierConfig("XGBoost",           xgb.simple_xg_boost_CT,      (200, 5),              (10, 300)),
+    ClassifierConfig("Naive Bayes",       GaussianNB,                  {},                                                                                   "naive_bayes",     "GaussianNB"),
+    ClassifierConfig("kNN",               KNeighborsClassifier,        {"n_neighbors": 1, "metric": "manhattan"},                                            "knn",             ("manhattan", 1)),
+    ClassifierConfig("Decision Tree",     DecisionTreeClassifier,      {"min_samples_leaf": 0.05, "max_depth": 5, "criterion": "entropy"},                   "decision_tree",   ("entropy", 50, 0.00005)),
+    ClassifierConfig("Random Forest",     RandomForestClassifier,      {"n_estimators": 150, "max_depth": 10, "max_features": "sqrt"},                       "random_forest",   ("sqrt", 25, 185)),
+    ClassifierConfig("Gradient Boosting", GradientBoostingClassifier,  {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 5, "max_features": "sqrt"},  "gradient_boost",  ("sqrt", 10, 300, 0.05)),
+    ClassifierConfig("XGBoost",           XGBClassifier,               {"n_estimators": 200, "max_depth": 5},                                                "xgboost",         (10, 300)),
 ]
 # fmt: on
 
@@ -57,7 +68,6 @@ CONFIGS_BY_SOURCE = {"PD": PD_CONFIGS, "CT": CT_CONFIGS}
 def classification(data, source):
     target = DATASETS[source].target_column
     configs = CONFIGS_BY_SOURCE[source]
-    is_binary = source == "PD"
 
     # split features / target
     data = data.apply(pd.to_numeric)
@@ -65,10 +75,11 @@ def classification(data, source):
     X: np.ndarray = data.values.astype(float)
     labels: np.ndarray = pd.unique(y)
     n_classes = len(labels)
+    is_binary = n_classes == 2
 
     # per-classifier accumulators (parallel to configs)
     accuracies: list[list[float]] = [[] for _ in configs]
-    specificities: list[list[float]] = [[] for _ in configs]
+    recalls: list[list[float]] = [[] for _ in configs]
     cnf_mtxs = [np.zeros((n_classes, n_classes), dtype=int) for _ in configs]
 
     cv = KFold(n_splits=10, random_state=42, shuffle=True)
@@ -78,20 +89,19 @@ def classification(data, source):
         trnX, trnY = balance.run(trnX, trnY, "all", 42, False)
 
         for i, cfg in enumerate(configs):
-            if is_binary:
-                acc, spec, cnf = cfg.fn(trnX, tstX, trnY, tstY, *cfg.call_params, labels)
-                specificities[i].append(spec)
-            else:
-                acc, cnf = cfg.fn(trnX, tstX, trnY, tstY, *cfg.call_params, labels)
+            estimator = cfg.estimator_cls(**cfg.call_params)
+            acc, recall, cnf = train(estimator, trnX, tstX, trnY, tstY, labels)
             accuracies[i].append(acc)
+            if recall is not None:
+                recalls[i].append(recall)
             cnf_mtxs[i] = np.add(cnf_mtxs[i], cnf)
 
     avg_accuracies = [sum(a) / len(a) for a in accuracies]
-    avg_specificities = [sum(s) / len(s) for s in specificities] if is_binary else None
+    avg_recalls = [sum(r) / len(r) for r in recalls] if is_binary else None
 
     if is_binary:
         reports = [
-            [cfg.name, cfg.display, avg_accuracies[i], avg_specificities[i], cnf_mtxs[i]]
+            [cfg.name, cfg.display, avg_accuracies[i], avg_recalls[i], cnf_mtxs[i]]
             for i, cfg in enumerate(configs)
         ]
         stats.print_report(reports, (True, True))

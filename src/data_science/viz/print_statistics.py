@@ -124,13 +124,13 @@ def print_report(reports, pre_parameters):
         clf_name = report[0]
         parameters = report[1]
         accuracy = report[2]
-        specificity = report[3]
+        recall = report[3]
         cnf_mtx = report[4]
         print(f"2.{i + 1} {clf_name}")
         accuracy_parameters = print_parameters(clf_name, parameters)
         print(f"\ta) Suggested parameterization: {accuracy_parameters}")
         print("\tb) Accuracy: {}".format(f"{accuracy:.2f}"))
-        print("\tc) Specificity: {}".format(f"{specificity:.2f}"))
+        print("\tc) Recall: {}".format(f"{recall:.2f}"))
         print("\td) Confusion matrix: ")
         print_cnf_mtx(cnf_mtx)
 
@@ -139,7 +139,7 @@ def print_report(reports, pre_parameters):
     for report in reports:
         accuracies += "{} | ".format(f"{report[2]:.2f}")
     print("\t3.1 Accuracy: " + accuracies[:-2])
-    specificities = ""
+    recalls = ""
     for report in reports:
-        specificities += "{} | ".format(f"{report[3]:.2f}")
-    print("\t3.2 Specificity: " + specificities[:-2])
+        recalls += "{} | ".format(f"{report[3]:.2f}")
+    print("\t3.2 Recall: " + recalls[:-2])
