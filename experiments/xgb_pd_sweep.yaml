@@ -1,0 +1,8 @@
+# Hyperparameter sweep for XGBoost on the Parkinson's dataset.
+# Run with: data-science --task experiment --config experiments/xgb_pd_sweep.yaml
+
+dataset: PD
+classifier: xgboost
+scaler: standard
+sampler: smote
+action: sweep
