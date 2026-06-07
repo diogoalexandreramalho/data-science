@@ -24,6 +24,9 @@ data/processed/**
 artifacts/scratch/
 results/scratch/
 
+# Weights & Biases local run dirs (offline runs land here)
+wandb/
+
 # LaTeX build files
 reports/*.aux
 reports/*.log

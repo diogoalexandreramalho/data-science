@@ -18,6 +18,7 @@ from typing import Any
 import pandas as pd
 from sklearn.model_selection import cross_validate
 
+from data_science.experiments import _wandb
 from data_science.experiments._context import load_context
 from data_science.models.pipelines import build_pipeline
 
@@ -27,24 +28,41 @@ def run_stage_1(config_path: str | Path) -> pd.DataFrame:
     ctx = load_context(config_path)
     print(f"=== {ctx.name}: Stage 1 (preprocessing matrix at defaults) ===")
     print(f"  output: {ctx.output_dir}")
-    df = _stage_1_impl(
-        X_train=ctx.X_train,
-        y_train=ctx.y_train,
-        preprocessing_configs=ctx.cfg["preprocessing"]["configs"],
-        models=ctx.models,
-        cv=ctx.cv,
-        scoring=ctx.scoring,
-        groups=ctx.groups_train,
-        continuous_columns=ctx.continuous_columns,
-        primary_metric=ctx.primary_metric,
-    )
-    out_path = ctx.output_dir / "stage_1_results.csv"
-    df.to_csv(out_path, index=False)
-    print(f"  wrote {out_path} ({len(df)} rows)")
+    wandb_run = _wandb.init(ctx, stage_name="stage-1")
+    try:
+        df = _stage_1_impl(
+            X_train=ctx.X_train,
+            y_train=ctx.y_train,
+            preprocessing_configs=ctx.cfg["preprocessing"]["configs"],
+            models=ctx.models,
+            cv=ctx.cv,
+            scoring=ctx.scoring,
+            groups=ctx.groups_train,
+            continuous_columns=ctx.continuous_columns,
+            primary_metric=ctx.primary_metric,
+        )
+        out_path = ctx.output_dir / "stage_1_results.csv"
+        df.to_csv(out_path, index=False)
+        print(f"  wrote {out_path} ({len(df)} rows)")
 
-    # Generate report comparison tables (baseline_preproc vs treatment_preproc).
-    _write_report_comparison_tables(ctx, df)
-    return df
+        # Generate report comparison tables (baseline_preproc vs treatment_preproc).
+        _write_report_comparison_tables(ctx, df)
+
+        _wandb.log_dataframe(wandb_run, df, "stage_1_results")
+        # Headline metric per (preprocessing, model) cell so charts work in the W&B UI
+        primary_col = f"mean_{ctx.primary_metric}"
+        best_row = df.loc[df[primary_col].idxmax()]
+        _wandb.log_scalars(
+            wandb_run,
+            {
+                f"stage_1/best_{ctx.primary_metric}": float(best_row[primary_col]),
+                "stage_1/best_model": best_row["model"],
+                "stage_1/best_preprocessing": best_row["preprocessing"],
+            },
+        )
+        return df
+    finally:
+        _wandb.finish(wandb_run)
 
 
 def _write_report_comparison_tables(ctx, stage_1_df: pd.DataFrame) -> None:

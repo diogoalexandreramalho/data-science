@@ -22,6 +22,7 @@ from data_science.evaluation.metrics import (
     evaluate_multiclass_classifier,
 )
 from data_science.evaluation.plots import plot_confusion_matrix
+from data_science.experiments import _wandb
 from data_science.experiments._context import load_context
 from data_science.models.pipelines import build_pipeline
 
@@ -50,61 +51,87 @@ def run_final_evaluation(config_path: str | Path) -> dict[str, Any]:
     tuning_results = pd.read_csv(tuning_path)
     tuning_results["best_params"] = tuning_results["best_params"].apply(_parse_params)
 
-    confusion_path = ctx.output_dir / "confusion_matrix.png"
-    result = run_final(
-        tuning_results=tuning_results,
-        X_train=ctx.X_train,
-        y_train=ctx.y_train,
-        X_test=ctx.X_test,
-        y_test=ctx.y_test,
-        preprocessing_configs=ctx.cfg["preprocessing"]["configs"],
-        models=ctx.models,
-        is_binary=ctx.is_binary,
-        class_names=ctx.class_names,
-        confusion_matrix_path=confusion_path,
-        continuous_columns=ctx.continuous_columns,
-        confusion_matrix_title=f"{ctx.name} best model — held-out test",
-    )
+    wandb_run = _wandb.init(ctx, stage_name="final")
+    try:
+        confusion_path = ctx.output_dir / "confusion_matrix.png"
+        result = run_final(
+            tuning_results=tuning_results,
+            X_train=ctx.X_train,
+            y_train=ctx.y_train,
+            X_test=ctx.X_test,
+            y_test=ctx.y_test,
+            preprocessing_configs=ctx.cfg["preprocessing"]["configs"],
+            models=ctx.models,
+            is_binary=ctx.is_binary,
+            class_names=ctx.class_names,
+            confusion_matrix_path=confusion_path,
+            continuous_columns=ctx.continuous_columns,
+            confusion_matrix_title=f"{ctx.name} best model — held-out test",
+        )
 
-    classification_report = result["metrics"]["classification_report"]
-    final_metrics = {
-        "best_model": result["best_model"],
-        "best_preprocessing": result["best_preprocessing"],
-        "best_params": result["best_params"],
-        "test_metrics": {
-            k: v for k, v in result["metrics"].items() if k != "classification_report"
-        },
-        "classification_report": classification_report,
-    }
-    final_path = ctx.output_dir / "final_metrics.json"
-    final_path.write_text(json.dumps(final_metrics, indent=2, default=str))
-    print(f"  wrote {final_path}")
-    print(f"  wrote {confusion_path}")
+        classification_report = result["metrics"]["classification_report"]
+        final_metrics = {
+            "best_model": result["best_model"],
+            "best_preprocessing": result["best_preprocessing"],
+            "best_params": result["best_params"],
+            "test_metrics": {
+                k: v for k, v in result["metrics"].items() if k != "classification_report"
+            },
+            "classification_report": classification_report,
+        }
+        final_path = ctx.output_dir / "final_metrics.json"
+        final_path.write_text(json.dumps(final_metrics, indent=2, default=str))
+        print(f"  wrote {final_path}")
+        print(f"  wrote {confusion_path}")
 
-    if not ctx.is_binary:
-        per_class_rows = []
-        for encoded_label, class_name in enumerate(ctx.class_names):
-            if str(encoded_label) in classification_report:
-                cls_metrics = classification_report[str(encoded_label)]
-                per_class_rows.append(
-                    {
-                        "class": class_name,
-                        "precision": cls_metrics["precision"],
-                        "recall": cls_metrics["recall"],
-                        "f1_score": cls_metrics["f1-score"],
-                        "support": cls_metrics["support"],
-                    }
-                )
-        per_class_path = ctx.output_dir / "per_class_metrics.csv"
-        pd.DataFrame(per_class_rows).to_csv(per_class_path, index=False)
-        print(f"  wrote {per_class_path}")
+        per_class_path: Path | None = None
+        if not ctx.is_binary:
+            per_class_rows = []
+            for encoded_label, class_name in enumerate(ctx.class_names):
+                if str(encoded_label) in classification_report:
+                    cls_metrics = classification_report[str(encoded_label)]
+                    per_class_rows.append(
+                        {
+                            "class": class_name,
+                            "precision": cls_metrics["precision"],
+                            "recall": cls_metrics["recall"],
+                            "f1_score": cls_metrics["f1-score"],
+                            "support": cls_metrics["support"],
+                        }
+                    )
+            per_class_path = ctx.output_dir / "per_class_metrics.csv"
+            pd.DataFrame(per_class_rows).to_csv(per_class_path, index=False)
+            print(f"  wrote {per_class_path}")
 
-    print(f"  best: {result['best_model']} ({result['best_preprocessing']})")
-    print(f"  test accuracy: {result['metrics']['accuracy']:.4f}")
-    primary_test_key = ctx.primary_metric if ctx.primary_metric in result["metrics"] else None
-    if primary_test_key:
-        print(f"  test {primary_test_key}: {result['metrics'][primary_test_key]:.4f}")
-    return result
+        print(f"  best: {result['best_model']} ({result['best_preprocessing']})")
+        print(f"  test accuracy: {result['metrics']['accuracy']:.4f}")
+        primary_test_key = ctx.primary_metric if ctx.primary_metric in result["metrics"] else None
+        if primary_test_key:
+            print(f"  test {primary_test_key}: {result['metrics'][primary_test_key]:.4f}")
+
+        # W&B logging: headline metrics + confusion matrix + per-class table
+        scalar_keys = (
+            "accuracy",
+            "precision",
+            "recall",
+            "specificity",
+            "f1",
+            "macro_f1",
+            "macro_precision",
+            "macro_recall",
+            "roc_auc",
+        )
+        _wandb.log_scalars(
+            wandb_run,
+            {f"test/{k}": v for k, v in result["metrics"].items() if k in scalar_keys},
+        )
+        _wandb.log_image(wandb_run, confusion_path, "test/confusion_matrix")
+        if per_class_path is not None:
+            _wandb.log_dataframe(wandb_run, pd.read_csv(per_class_path), "test/per_class")
+
+        return result
+    finally:
+        _wandb.finish(wandb_run)
 
 
 def run_final(

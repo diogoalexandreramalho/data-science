@@ -17,6 +17,7 @@ from typing import Any
 import pandas as pd
 from sklearn.model_selection import GridSearchCV, cross_validate
 
+from data_science.experiments import _wandb
 from data_science.experiments._context import load_context, load_grids
 from data_science.models.pipelines import build_pipeline
 
@@ -36,34 +37,47 @@ def run_stage_2(config_path: str | Path) -> pd.DataFrame:
     stage_1_results = pd.read_csv(stage_1_path)
 
     grids = load_grids(ctx.source_code, list(ctx.models))
-    df = run_tune(
-        stage_1_results=stage_1_results,
-        X_train=ctx.X_train,
-        y_train=ctx.y_train,
-        preprocessing_configs=ctx.cfg["preprocessing"]["configs"],
-        models=ctx.models,
-        grids=grids,
-        cv=ctx.cv,
-        primary_metric=ctx.primary_metric,
-        groups=ctx.groups_train,
-        continuous_columns=ctx.continuous_columns,
-        grid_search_verbose=1,
-    )
-    out_path = ctx.output_dir / "tuning_results.csv"
-    df.to_csv(out_path, index=False)
-    print(f"  wrote {out_path} ({len(df)} rows)")
+    wandb_run = _wandb.init(ctx, stage_name="stage-2")
+    try:
+        df = run_tune(
+            stage_1_results=stage_1_results,
+            X_train=ctx.X_train,
+            y_train=ctx.y_train,
+            preprocessing_configs=ctx.cfg["preprocessing"]["configs"],
+            models=ctx.models,
+            grids=grids,
+            cv=ctx.cv,
+            primary_metric=ctx.primary_metric,
+            groups=ctx.groups_train,
+            continuous_columns=ctx.continuous_columns,
+            grid_search_verbose=1,
+        )
+        out_path = ctx.output_dir / "tuning_results.csv"
+        df.to_csv(out_path, index=False)
+        print(f"  wrote {out_path} ({len(df)} rows)")
 
-    # Re-evaluate each tuned (model, preprocessing) cell with the full scoring set.
-    # Stage 2 grid-search only stored the primary metric per row; this step fills
-    # in every metric for downstream analysis / report tables.
-    print()
-    print("  Re-evaluating each tuned classifier with the full scoring set...")
-    overall = _evaluate_tuned_with_full_scoring(ctx, df)
-    overall_path = ctx.output_dir / "tuned_overall_metrics.csv"
-    overall.to_csv(overall_path, index=False)
-    print(f"  wrote {overall_path} ({len(overall)} rows)")
+        # Re-evaluate each tuned (model, preprocessing) cell with the full scoring set.
+        print()
+        print("  Re-evaluating each tuned classifier with the full scoring set...")
+        overall = _evaluate_tuned_with_full_scoring(ctx, df)
+        overall_path = ctx.output_dir / "tuned_overall_metrics.csv"
+        overall.to_csv(overall_path, index=False)
+        print(f"  wrote {overall_path} ({len(overall)} rows)")
 
-    return df
+        _wandb.log_dataframe(wandb_run, df, "tuning_results")
+        _wandb.log_dataframe(wandb_run, overall, "tuned_overall_metrics")
+        winner = df.loc[df["best_score"].idxmax()]
+        _wandb.log_scalars(
+            wandb_run,
+            {
+                f"stage_2/best_{ctx.primary_metric}": float(winner["best_score"]),
+                "stage_2/winner_model": winner["model"],
+                "stage_2/winner_preprocessing": winner["best_preprocessing"],
+            },
+        )
+        return df
+    finally:
+        _wandb.finish(wandb_run)
 
 
 def _evaluate_tuned_with_full_scoring(ctx, tuning_results: pd.DataFrame) -> pd.DataFrame:

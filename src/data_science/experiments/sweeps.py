@@ -33,6 +33,7 @@ from data_science.evaluation.sweep_plots import (
     plot_scaling_impact,
     plot_sweep,
 )
+from data_science.experiments import _wandb
 from data_science.experiments._context import load_context
 from data_science.features.preprocessing import (
     build_feature_selector,
@@ -162,6 +163,7 @@ def run_sweeps(config_path: str | Path) -> None:
     plots_dir = ctx.output_dir / "plots"
     plots_dir.mkdir(parents=True, exist_ok=True)
     overall_start = time.time()
+    wandb_run = _wandb.init(ctx, stage_name="sweeps")
 
     # --- 1. Scaling impact (no compute — reads stage_1_results.csv) ---
     stage_1_path = ctx.output_dir / "stage_1_results.csv"
@@ -342,6 +344,29 @@ def run_sweeps(config_path: str | Path) -> None:
                 log_x=spec["log_x"],
             )
             print(f"    wrote {sweep_csv}")
+
+    # W&B logging: bundle the headline sweep CSVs + key plots.
+    sweep_csvs = {
+        "feature_selection_sweep": ctx.output_dir / "feature_selection_sweep.csv",
+        "feature_selection_per_class": ctx.output_dir / "feature_selection_per_class.csv",
+        "pca_sweep": ctx.output_dir / "pca_sweep.csv",
+        "feature_ranking_anova": ctx.output_dir / "feature_ranking_anova.csv",
+    }
+    for key, path in sweep_csvs.items():
+        if path.exists():
+            _wandb.log_dataframe(wandb_run, pd.read_csv(path), f"sweeps/{key}")
+    for plot_name in ("scaling_impact", "feature_selection_sweep", "pca_sweep"):
+        _wandb.log_image(wandb_run, plots_dir / f"{plot_name}.png", f"sweeps/plots/{plot_name}")
+    for spec in _CLASSIFIER_SWEEP_SPECS:
+        csv = ctx.output_dir / f"classifier_sweep_{spec['name']}.csv"
+        if csv.exists():
+            _wandb.log_dataframe(wandb_run, pd.read_csv(csv), f"sweeps/classifier_{spec['name']}")
+            _wandb.log_image(
+                wandb_run,
+                plots_dir / f"classifier_sweep_{spec['name']}.png",
+                f"sweeps/plots/classifier_{spec['name']}",
+            )
+    _wandb.finish(wandb_run)
 
     print()
     print(f"=== {ctx.name}: sweeps done in {(time.time() - overall_start) / 60:.1f} min ===")

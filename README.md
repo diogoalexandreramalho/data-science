@@ -196,6 +196,32 @@ data-science/
 
 
 
+## Model cards
+
+Per-model documentation following the
+[Model Cards for Model Reporting](https://arxiv.org/abs/1810.03993) format
+— intended use, training data, performance, ethical considerations, and
+known limitations:
+
+- [`MODEL_CARD_parkinsons.md`](MODEL_CARD_parkinsons.md) — Gradient Boosting on Parkinson's voice features
+- [`MODEL_CARD_covertype.md`](MODEL_CARD_covertype.md) — Gradient Boosting on Forest Covertype
+
+## Experiment tracking (optional)
+
+The pipeline ships with optional [Weights & Biases](https://wandb.ai/site)
+integration: each pipeline stage can log metrics, sweep tables, and the
+trained model's confusion matrix to a W&B project.
+
+Disabled by default — opt in by setting `wandb.enabled: true` in the
+relevant config (`configs/{parkinsons,covertype}.yaml`) and authenticating:
+
+```bash
+uv run wandb login                # one-time, paste API key from https://wandb.ai/authorize
+make stage1                       # runs are logged to https://wandb.ai/<entity>/data-science
+```
+
+For local-only runs without a W&B account: `WANDB_MODE=offline make stage1`.
+
 ## Development
 
 ```bash
