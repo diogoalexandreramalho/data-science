@@ -51,4 +51,4 @@ def reproduce_all(configs: list[Path] | None = None) -> None:
         run_final_evaluation(config_path)
 
     print()
-    print(f"=== reproduce_all done in {(time.time() - overall_start)/60:.1f} min ===")
+    print(f"=== reproduce_all done in {(time.time() - overall_start) / 60:.1f} min ===")

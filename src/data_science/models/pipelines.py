@@ -28,14 +28,16 @@ def build_pipeline(
     """
     steps: list[tuple[str, Any]] = []
 
-    steps.append((
-        "preprocessor",
-        build_preprocessor(
-            X=X,
-            scale=preprocessing_config.get("scale", False),
-            continuous_columns=continuous_columns,
-        ),
-    ))
+    steps.append(
+        (
+            "preprocessor",
+            build_preprocessor(
+                X=X,
+                scale=preprocessing_config.get("scale", False),
+                continuous_columns=continuous_columns,
+            ),
+        )
+    )
 
     if preprocessing_config.get("feature_selection", False):
         k_best = preprocessing_config["k_best"]

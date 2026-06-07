@@ -17,10 +17,12 @@ from typing import Any
 
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.feature_selection import f_classif
 from sklearn.metrics import classification_report
 from sklearn.model_selection import cross_val_predict, cross_validate
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 
@@ -59,8 +61,36 @@ _CLASSIFIER_SWEEP_SPECS = [
         "fixed": {},
         "x_param": "n_neighbors",
         "x_values": [
-            1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 25, 31, 35, 40, 45,
-            50, 52, 55, 60, 70, 80, 90, 100, 105, 110, 120, 130, 140, 150,
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            15,
+            17,
+            19,
+            21,
+            25,
+            31,
+            35,
+            40,
+            45,
+            50,
+            52,
+            55,
+            60,
+            70,
+            80,
+            90,
+            100,
+            105,
+            110,
+            120,
+            130,
+            140,
+            150,
         ],
         "x_label": "Number of neighbors (k)",
         "line_param": "metric",
@@ -149,7 +179,12 @@ def run_sweeps(config_path: str | Path) -> None:
     else:
         print(f"  skipped scaling plot: {stage_1_path} not found")
 
-    # --- 2. Feature selection sweep ---
+    # --- 2. ANOVA feature ranking (cheap; ranks every feature by univariate F-statistic) ---
+    print()
+    print("  Computing ANOVA feature ranking...")
+    _write_feature_ranking_anova(ctx)
+
+    # --- 3. Feature selection sweep ---
     k_values = _FS_K_VALUES_BY_DATASET.get(ctx.name)
     if k_values:
         # Log scale if the k range spans more than two orders of magnitude
@@ -159,16 +194,23 @@ def run_sweeps(config_path: str | Path) -> None:
         print()
         print(f"  Running feature selection sweep ({len(k_values)} k values)...")
         fs_df = sweep_feature_selection(
-            X_train=ctx.X_train, y_train=ctx.y_train,
-            k_values=k_values, models=ctx.models, cv=ctx.cv,
-            scoring=ctx.scoring, primary_metric=ctx.primary_metric,
-            scale=True, groups=ctx.groups_train,
+            X_train=ctx.X_train,
+            y_train=ctx.y_train,
+            k_values=k_values,
+            models=ctx.models,
+            cv=ctx.cv,
+            scoring=ctx.scoring,
+            primary_metric=ctx.primary_metric,
+            scale=True,
+            groups=ctx.groups_train,
             continuous_columns=ctx.continuous_columns,
         )
         fs_csv = ctx.output_dir / "feature_selection_sweep.csv"
         fs_df.to_csv(fs_csv, index=False)
         plot_sweep(
-            sweep_df=fs_df, x_col="k", primary_metric=ctx.primary_metric,
+            sweep_df=fs_df,
+            x_col="k",
+            primary_metric=ctx.primary_metric,
             output_path=plots_dir / "feature_selection_sweep.png",
             title=f"{ctx.name}: {ctx.primary_metric} vs number of selected features",
             x_label="Number of features (k)",
@@ -180,10 +222,14 @@ def run_sweeps(config_path: str | Path) -> None:
         print()
         print("  Running per-class feature selection sweep...")
         per_class_df = sweep_feature_selection_per_class(
-            X_train=ctx.X_train, y_train=ctx.y_train,
-            k_values=k_values, models=ctx.models, cv=ctx.cv,
+            X_train=ctx.X_train,
+            y_train=ctx.y_train,
+            k_values=k_values,
+            models=ctx.models,
+            cv=ctx.cv,
             class_names=ctx.class_names,
-            scale=True, groups=ctx.groups_train,
+            scale=True,
+            groups=ctx.groups_train,
             continuous_columns=ctx.continuous_columns,
         )
         per_class_csv = ctx.output_dir / "feature_selection_per_class.csv"
@@ -191,7 +237,9 @@ def run_sweeps(config_path: str | Path) -> None:
         for model_name in ctx.models:
             model_df = per_class_df[per_class_df["model"] == model_name]
             plot_per_class_sweep(
-                sweep_df=model_df, x_col="k", metric="f1_score",
+                sweep_df=model_df,
+                x_col="k",
+                metric="f1_score",
                 output_path=plots_dir / f"feature_selection_per_class_{model_name}.png",
                 title=f"{ctx.name}: per-class F1 vs k ({model_name})",
                 x_label="Number of features (k)",
@@ -200,9 +248,7 @@ def run_sweeps(config_path: str | Path) -> None:
         print(f"  wrote {per_class_csv} + {len(ctx.models)} per-class plots")
 
     # --- 3. PCA variance + sweep (only if config uses PCA) ---
-    uses_pca = any(
-        cfg.get("pca", False) for cfg in ctx.cfg["preprocessing"]["configs"]
-    )
+    uses_pca = any(cfg.get("pca", False) for cfg in ctx.cfg["preprocessing"]["configs"])
     pca_n_components = _PCA_N_COMPONENTS_BY_DATASET.get(ctx.name)
     if uses_pca and pca_n_components:
         print()
@@ -218,19 +264,27 @@ def run_sweeps(config_path: str | Path) -> None:
         print()
         print(f"  Running PCA sweep ({len(pca_n_components)} n_components values)...")
         pca_df = sweep_pca(
-            X_train=ctx.X_train, y_train=ctx.y_train,
-            n_components_values=pca_n_components, models=ctx.models, cv=ctx.cv,
-            scoring=ctx.scoring, primary_metric=ctx.primary_metric,
-            scale=True, groups=ctx.groups_train,
+            X_train=ctx.X_train,
+            y_train=ctx.y_train,
+            n_components_values=pca_n_components,
+            models=ctx.models,
+            cv=ctx.cv,
+            scoring=ctx.scoring,
+            primary_metric=ctx.primary_metric,
+            scale=True,
+            groups=ctx.groups_train,
             continuous_columns=ctx.continuous_columns,
         )
         pca_csv = ctx.output_dir / "pca_sweep.csv"
         pca_df.to_csv(pca_csv, index=False)
         plot_sweep(
-            sweep_df=pca_df, x_col="n_components", primary_metric=ctx.primary_metric,
+            sweep_df=pca_df,
+            x_col="n_components",
+            primary_metric=ctx.primary_metric,
             output_path=plots_dir / "pca_sweep.png",
             title=f"{ctx.name}: {ctx.primary_metric} vs number of PCA components",
-            x_label="Number of PCA components", log_x=True,
+            x_label="Number of PCA components",
+            log_x=True,
         )
         print(f"  wrote {pca_csv}")
 
@@ -258,29 +312,57 @@ def run_sweeps(config_path: str | Path) -> None:
                 f"sweep starting..."
             )
             sweep_df = sweep_classifier_hyperparameter(
-                X_train=ctx.X_train, y_train=ctx.y_train,
-                classifier_cls=spec["classifier_cls"], fixed_params=spec["fixed"],
-                x_param=spec["x_param"], x_values=spec["x_values"],
-                line_param=spec["line_param"], line_values=spec["line_values"],
-                cv=ctx.cv, scoring=ctx.scoring, primary_metric=ctx.primary_metric,
+                X_train=ctx.X_train,
+                y_train=ctx.y_train,
+                classifier_cls=spec["classifier_cls"],
+                fixed_params=spec["fixed"],
+                x_param=spec["x_param"],
+                x_values=spec["x_values"],
+                line_param=spec["line_param"],
+                line_values=spec["line_values"],
+                cv=ctx.cv,
+                scoring=ctx.scoring,
+                primary_metric=ctx.primary_metric,
                 preprocessing_config=preproc_cfg,
-                groups=ctx.groups_train, continuous_columns=ctx.continuous_columns,
+                groups=ctx.groups_train,
+                continuous_columns=ctx.continuous_columns,
             )
             sweep_csv = ctx.output_dir / f"classifier_sweep_{spec['name']}.csv"
             sweep_df.to_csv(sweep_csv, index=False)
             preproc_name = preproc_cfg.get("name", "scaled")
             plot_classifier_sweep_multi_metric(
-                sweep_df=sweep_df, x_col=spec["x_param"], line_col=spec["line_param"],
+                sweep_df=sweep_df,
+                x_col=spec["x_param"],
+                line_col=spec["line_param"],
                 metrics=tuple(ctx.scoring.keys()),
                 output_path=plots_dir / f"classifier_sweep_{spec['name']}.png",
                 title=f"{ctx.name}: hyperparameter sweep for {spec['title_name']} ({preproc_name})",
-                x_label=spec["x_label"], line_label=spec["line_label"],
+                x_label=spec["x_label"],
+                line_label=spec["line_label"],
                 log_x=spec["log_x"],
             )
             print(f"    wrote {sweep_csv}")
 
     print()
-    print(f"=== {ctx.name}: sweeps done in {(time.time() - overall_start)/60:.1f} min ===")
+    print(f"=== {ctx.name}: sweeps done in {(time.time() - overall_start) / 60:.1f} min ===")
+
+
+def _write_feature_ranking_anova(ctx) -> None:
+    """ANOVA F-statistic per feature, ranked, written to feature_ranking_anova.csv.
+
+    Computed on the scaled training data (matches the scaling step inside the
+    feature-selection sweep). Same scorer as SelectKBest(f_classif).
+    """
+    X_scaled = StandardScaler().fit_transform(ctx.X_train)
+    f_scores, p_values = f_classif(X_scaled, ctx.y_train)
+    rank = (
+        pd.DataFrame({"feature": ctx.X_train.columns, "f_score": f_scores, "p_value": p_values})
+        .sort_values("f_score", ascending=False)
+        .reset_index(drop=True)
+    )
+    out = ctx.output_dir / "feature_ranking_anova.csv"
+    rank.to_csv(out, index=False)
+    print(f"  wrote {out} ({len(rank)} features)")
 
 
 def _build_fs_pipeline(
@@ -291,11 +373,13 @@ def _build_fs_pipeline(
     continuous_columns: list[str] | None,
 ) -> Pipeline:
     preprocessor = build_preprocessor(X=X, scale=scale, continuous_columns=continuous_columns)
-    return Pipeline([
-        ("preprocessor", preprocessor),
-        ("feature_selection", build_feature_selector(k_best=k)),
-        ("model", model),
-    ])
+    return Pipeline(
+        [
+            ("preprocessor", preprocessor),
+            ("feature_selection", build_feature_selector(k_best=k)),
+            ("model", model),
+        ]
+    )
 
 
 def _build_pca_pipeline(
@@ -306,11 +390,13 @@ def _build_pca_pipeline(
     continuous_columns: list[str] | None,
 ) -> Pipeline:
     preprocessor = build_preprocessor(X=X, scale=scale, continuous_columns=continuous_columns)
-    return Pipeline([
-        ("preprocessor", preprocessor),
-        ("pca", build_pca_transformer(n_components=n_components)),
-        ("model", model),
-    ])
+    return Pipeline(
+        [
+            ("preprocessor", preprocessor),
+            ("pca", build_pca_transformer(n_components=n_components)),
+            ("model", model),
+        ]
+    )
 
 
 def sweep_feature_selection(
@@ -342,8 +428,14 @@ def sweep_feature_selection(
             cell_start = time.time()
             pipe = _build_fs_pipeline(X_train, model, k, scale, continuous_columns)
             scores = cross_validate(
-                pipe, X_train, y_train, cv=cv, scoring=scoring,
-                groups=groups, n_jobs=-1, return_train_score=False,
+                pipe,
+                X_train,
+                y_train,
+                cv=cv,
+                scoring=scoring,
+                groups=groups,
+                n_jobs=-1,
+                return_train_score=False,
             )
             row: dict[str, Any] = {"k": k, "model": model_name}
             for metric_name in scoring:
@@ -361,7 +453,7 @@ def sweep_feature_selection(
                 )
 
     if verbose:
-        print(f"  feature selection sweep done in {(time.time() - stage_start)/60:.1f} min")
+        print(f"  feature selection sweep done in {(time.time() - stage_start) / 60:.1f} min")
     return pd.DataFrame(rows)
 
 
@@ -394,8 +486,14 @@ def sweep_pca(
             cell_start = time.time()
             pipe = _build_pca_pipeline(X_train, model, n, scale, continuous_columns)
             scores = cross_validate(
-                pipe, X_train, y_train, cv=cv, scoring=scoring,
-                groups=groups, n_jobs=-1, return_train_score=False,
+                pipe,
+                X_train,
+                y_train,
+                cv=cv,
+                scoring=scoring,
+                groups=groups,
+                n_jobs=-1,
+                return_train_score=False,
             )
             row: dict[str, Any] = {"n_components": n, "model": model_name}
             for metric_name in scoring:
@@ -413,7 +511,7 @@ def sweep_pca(
                 )
 
     if verbose:
-        print(f"  PCA sweep done in {(time.time() - stage_start)/60:.1f} min")
+        print(f"  PCA sweep done in {(time.time() - stage_start) / 60:.1f} min")
     return pd.DataFrame(rows)
 
 
@@ -456,27 +554,41 @@ def sweep_classifier_hyperparameter(
             clf = classifier_cls(**params)
 
             steps: list[tuple[str, Any]] = [
-                ("preprocessor", build_preprocessor(
-                    X=X_train, scale=cfg.get("scale", False),
-                    continuous_columns=continuous_columns,
-                )),
+                (
+                    "preprocessor",
+                    build_preprocessor(
+                        X=X_train,
+                        scale=cfg.get("scale", False),
+                        continuous_columns=continuous_columns,
+                    ),
+                ),
             ]
             if cfg.get("feature_selection", False):
-                steps.append((
-                    "feature_selection",
-                    build_feature_selector(k_best=cfg["k_best"]),
-                ))
+                steps.append(
+                    (
+                        "feature_selection",
+                        build_feature_selector(k_best=cfg["k_best"]),
+                    )
+                )
             if cfg.get("pca", False):
-                steps.append((
-                    "pca",
-                    build_pca_transformer(n_components=cfg["pca_components"]),
-                ))
+                steps.append(
+                    (
+                        "pca",
+                        build_pca_transformer(n_components=cfg["pca_components"]),
+                    )
+                )
             steps.append(("model", clf))
             pipe = Pipeline(steps)
 
             scores = cross_validate(
-                pipe, X_train, y_train, cv=cv, scoring=scoring,
-                groups=groups, n_jobs=-1, return_train_score=False,
+                pipe,
+                X_train,
+                y_train,
+                cv=cv,
+                scoring=scoring,
+                groups=groups,
+                n_jobs=-1,
+                return_train_score=False,
             )
             row: dict[str, Any] = {x_param: x_val, line_param: line_val}
             for metric_name in scoring:
@@ -495,7 +607,7 @@ def sweep_classifier_hyperparameter(
                 )
 
     if verbose:
-        print(f"  sweep done in {(time.time() - stage_start)/60:.1f} min")
+        print(f"  sweep done in {(time.time() - stage_start) / 60:.1f} min")
     return pd.DataFrame(rows)
 
 
@@ -530,21 +642,28 @@ def sweep_feature_selection_per_class(
             cell_start = time.time()
             pipe = _build_fs_pipeline(X_train, model, k, scale, continuous_columns)
             y_pred = cross_val_predict(
-                pipe, X_train, y_train, cv=cv, groups=groups, n_jobs=-1,
+                pipe,
+                X_train,
+                y_train,
+                cv=cv,
+                groups=groups,
+                n_jobs=-1,
             )
             cr = classification_report(y_train, y_pred, output_dict=True, zero_division=0)
             for class_idx, class_name in enumerate(class_names):
                 class_key = str(class_idx)
                 if class_key in cr:
-                    rows.append({
-                        "k": k,
-                        "model": model_name,
-                        "class": class_name,
-                        "precision": cr[class_key]["precision"],
-                        "recall": cr[class_key]["recall"],
-                        "f1_score": cr[class_key]["f1-score"],
-                        "support": cr[class_key]["support"],
-                    })
+                    rows.append(
+                        {
+                            "k": k,
+                            "model": model_name,
+                            "class": class_name,
+                            "precision": cr[class_key]["precision"],
+                            "recall": cr[class_key]["recall"],
+                            "f1_score": cr[class_key]["f1-score"],
+                            "support": cr[class_key]["support"],
+                        }
+                    )
 
             if verbose:
                 cell_t = time.time() - cell_start
@@ -556,5 +675,5 @@ def sweep_feature_selection_per_class(
                 )
 
     if verbose:
-        print(f"  per-class FS sweep done in {(time.time() - stage_start)/60:.1f} min")
+        print(f"  per-class FS sweep done in {(time.time() - stage_start) / 60:.1f} min")
     return pd.DataFrame(rows)

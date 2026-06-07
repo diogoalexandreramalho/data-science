@@ -82,15 +82,9 @@ def evaluate_multiclass_classifier(
 
     return {
         "accuracy": accuracy_score(y_test, y_pred),
-        "macro_precision": precision_score(
-            y_test, y_pred, average="macro", zero_division=0
-        ),
-        "macro_recall": recall_score(
-            y_test, y_pred, average="macro", zero_division=0
-        ),
-        "macro_f1": f1_score(
-            y_test, y_pred, average="macro", zero_division=0
-        ),
+        "macro_precision": precision_score(y_test, y_pred, average="macro", zero_division=0),
+        "macro_recall": recall_score(y_test, y_pred, average="macro", zero_division=0),
+        "macro_f1": f1_score(y_test, y_pred, average="macro", zero_division=0),
         "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
         "classification_report": classification_report(
             y_test,

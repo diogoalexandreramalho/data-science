@@ -3,11 +3,11 @@ from __future__ import annotations
 import argparse
 
 from data_science.data.datasets import DATASETS
-from data_science.experiments.stage_1 import run_stage_1
-from data_science.experiments.sweeps import run_sweeps
-from data_science.experiments.stage_2 import run_stage_2
 from data_science.experiments.final import run_final_evaluation
 from data_science.experiments.reproduce import reproduce_all
+from data_science.experiments.stage_1 import run_stage_1
+from data_science.experiments.stage_2 import run_stage_2
+from data_science.experiments.sweeps import run_sweeps
 
 
 def build_parser() -> argparse.ArgumentParser:

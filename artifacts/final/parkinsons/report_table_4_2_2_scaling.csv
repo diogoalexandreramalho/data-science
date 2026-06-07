@@ -1,7 +1,0 @@
-Model,Raw F1,Scaled F1,Difference
-Naive Bayes,0.7702,0.7913,0.021
-kNN,0.8185,0.8774,0.0589
-Decision Tree,0.8321,0.8202,-0.0119
-Random Forest,0.8949,0.8868,-0.0081
-Gradient Boosting,0.8855,0.8895,0.004
-XGBoost,0.8833,0.8803,-0.0029

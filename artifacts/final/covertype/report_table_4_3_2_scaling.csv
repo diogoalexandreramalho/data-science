@@ -1,7 +1,0 @@
-Model,Raw Macro F1,Scaled Macro F1,Difference
-Naive Bayes,0.5528,0.3748,-0.1779
-kNN,0.7396,0.728,-0.0117
-Decision Tree,0.7344,0.7339,-0.0005
-Random Forest,0.8173,0.8175,0.0003
-Gradient Boosting,0.775,0.7749,-0.0002
-XGBoost,0.8247,0.8247,0.0

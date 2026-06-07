@@ -94,7 +94,8 @@ def load_context(config_path: str | Path) -> Context:
 
     if cfg["split"]["strategy"] == "group":
         X_train, X_test, y_train, y_test, g_train, g_test = create_train_test_split(
-            X, y,
+            X,
+            y,
             strategy="group",
             test_size=cfg["split"]["test_size"],
             random_state=random_state,
@@ -102,7 +103,8 @@ def load_context(config_path: str | Path) -> Context:
         )
     else:
         X_train, X_test, y_train, y_test, _, _ = create_train_test_split(
-            X, y,
+            X,
+            y,
             strategy=cfg["split"]["strategy"],
             test_size=cfg["split"]["test_size"],
             random_state=random_state,
@@ -147,9 +149,7 @@ def load_context(config_path: str | Path) -> Context:
     )
 
 
-def load_grids(
-    source_code: str, classifier_names: list[str]
-) -> dict[str, dict[str, list[Any]]]:
+def load_grids(source_code: str, classifier_names: list[str]) -> dict[str, dict[str, list[Any]]]:
     """Load Stage-2 grid-search hyperparameter grids from configs/hyperparameters.yaml."""
     with HYPERPARAMS_PATH.open() as f:
         all_grids = yaml.safe_load(f)

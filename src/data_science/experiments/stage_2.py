@@ -9,12 +9,13 @@ Public surfaces:
 
 from __future__ import annotations
 
+import ast
 import time
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, cross_validate
 
 from data_science.experiments._context import load_context, load_grids
 from data_science.models.pipelines import build_pipeline
@@ -51,7 +52,57 @@ def run_stage_2(config_path: str | Path) -> pd.DataFrame:
     out_path = ctx.output_dir / "tuning_results.csv"
     df.to_csv(out_path, index=False)
     print(f"  wrote {out_path} ({len(df)} rows)")
+
+    # Re-evaluate each tuned (model, preprocessing) cell with the full scoring set.
+    # Stage 2 grid-search only stored the primary metric per row; this step fills
+    # in every metric for downstream analysis / report tables.
+    print()
+    print("  Re-evaluating each tuned classifier with the full scoring set...")
+    overall = _evaluate_tuned_with_full_scoring(ctx, df)
+    overall_path = ctx.output_dir / "tuned_overall_metrics.csv"
+    overall.to_csv(overall_path, index=False)
+    print(f"  wrote {overall_path} ({len(overall)} rows)")
+
     return df
+
+
+def _evaluate_tuned_with_full_scoring(ctx, tuning_results: pd.DataFrame) -> pd.DataFrame:
+    """For each tuned (model, preprocessing) row, run CV with the FULL scoring set."""
+    configs_by_name = {c["name"]: c for c in ctx.cfg["preprocessing"]["configs"]}
+    rows = []
+    for _, row in tuning_results.iterrows():
+        model_name = row["model"]
+        preproc_name = row["best_preprocessing"]
+        params = row["best_params"]
+        if isinstance(params, str):
+            params = ast.literal_eval(params) if params and params != "{}" else {}
+
+        model = ctx.models[model_name]
+        if params:
+            model.set_params(**params)
+
+        pipe = build_pipeline(
+            X=ctx.X_train,
+            model=model,
+            preprocessing_config=configs_by_name[preproc_name],
+            continuous_columns=ctx.continuous_columns,
+        )
+        cv_res = cross_validate(
+            pipe,
+            ctx.X_train,
+            ctx.y_train,
+            cv=ctx.cv,
+            scoring=ctx.scoring,
+            groups=ctx.groups_train,
+            n_jobs=-1,
+            return_train_score=False,
+        )
+        out_row: dict[str, Any] = {"model": model_name, "best_preprocessing": preproc_name}
+        for metric_name in ctx.scoring:
+            out_row[f"mean_{metric_name}"] = cv_res[f"test_{metric_name}"].mean()
+            out_row[f"std_{metric_name}"] = cv_res[f"test_{metric_name}"].std()
+        rows.append(out_row)
+    return pd.DataFrame(rows)
 
 
 def tune_classifier(
@@ -141,15 +192,16 @@ def run_tune(
         if not grid:
             if verbose:
                 print(
-                    f"  {model_name:20s} no grid -> "
-                    f"using Stage 1 result ({best_row[mean_col]:.4f})"
+                    f"  {model_name:20s} no grid -> using Stage 1 result ({best_row[mean_col]:.4f})"
                 )
-            rows.append({
-                "model": model_name,
-                "best_preprocessing": best_preprocessing_name,
-                "best_params": {},
-                "best_score": best_row[mean_col],
-            })
+            rows.append(
+                {
+                    "model": model_name,
+                    "best_preprocessing": best_preprocessing_name,
+                    "best_params": {},
+                    "best_score": best_row[mean_col],
+                }
+            )
             continue
 
         grid_size = 1
@@ -179,19 +231,21 @@ def run_tune(
 
         if verbose:
             print(
-                f"  {model_name:20s} done in {classifier_elapsed/60:5.1f}m, "
+                f"  {model_name:20s} done in {classifier_elapsed / 60:5.1f}m, "
                 f"best_score={tune_result['best_score']:.4f}, "
                 f"best_params={tune_result['best_params']}",
                 flush=True,
             )
 
-        rows.append({
-            "model": model_name,
-            "best_preprocessing": best_preprocessing_name,
-            "best_params": tune_result["best_params"],
-            "best_score": tune_result["best_score"],
-        })
+        rows.append(
+            {
+                "model": model_name,
+                "best_preprocessing": best_preprocessing_name,
+                "best_params": tune_result["best_params"],
+                "best_score": tune_result["best_score"],
+            }
+        )
 
     if verbose:
-        print(f"  Stage 2 done in {(time.time() - stage_start)/60:.1f} min")
+        print(f"  Stage 2 done in {(time.time() - stage_start) / 60:.1f} min")
     return pd.DataFrame(rows)

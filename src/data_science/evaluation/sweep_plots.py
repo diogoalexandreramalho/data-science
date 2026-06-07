@@ -49,9 +49,12 @@ def plot_per_class_metrics(
     for i, metric in enumerate(metric_cols):
         offset = (i - (n_metrics - 1) / 2) * width
         ax.bar(
-            x + offset, per_class_df[metric].values, width,
+            x + offset,
+            per_class_df[metric].values,
+            width,
             label=metric_display.get(metric, metric),
-            color=colors(i), alpha=0.9,
+            color=colors(i),
+            alpha=0.9,
         )
 
     ax.set_xticks(x)
@@ -90,8 +93,13 @@ def plot_classifier_sweep(
         x_vals = sub[x_col].values
         means = sub[mean_col].values
         ax.plot(
-            x_vals, means, marker="o", color=colors(color_idx),
-            label=str(line_val), linewidth=2, markersize=7,
+            x_vals,
+            means,
+            marker="o",
+            color=colors(color_idx),
+            label=str(line_val),
+            linewidth=2,
+            markersize=7,
         )
 
     if log_x:
@@ -99,9 +107,12 @@ def plot_classifier_sweep(
         unique_x = sorted(set(sweep_df[x_col].unique()))
         ax.set_xticks(unique_x)
         ax.set_xticklabels(
-            [str(int(x)) if isinstance(x, (int, float)) and float(x).is_integer() else str(x)
-             for x in unique_x],
-            rotation=45, ha="right",
+            [
+                str(int(x)) if isinstance(x, (int, float)) and float(x).is_integer() else str(x)
+                for x in unique_x
+            ],
+            rotation=45,
+            ha="right",
         )
         ax.minorticks_off()
 
@@ -151,7 +162,8 @@ def plot_classifier_sweep_multi_metric(
     nrows = (n + ncols - 1) // ncols
 
     fig, axes = plt.subplots(
-        nrows, ncols,
+        nrows,
+        ncols,
         figsize=(6 * ncols, 4.5 * nrows),
         squeeze=False,
     )
@@ -165,10 +177,14 @@ def plot_classifier_sweep_multi_metric(
         mean_col = f"mean_{metric}"
         for color_idx, line_val in enumerate(line_values):
             sub = sweep_df[sweep_df[line_col] == line_val].sort_values(x_col)
-            line, = ax.plot(
-                sub[x_col].values, sub[mean_col].values,
-                marker="o", color=colors(color_idx),
-                label=str(line_val), linewidth=1.8, markersize=5,
+            (line,) = ax.plot(
+                sub[x_col].values,
+                sub[mean_col].values,
+                marker="o",
+                color=colors(color_idx),
+                label=str(line_val),
+                linewidth=1.8,
+                markersize=5,
             )
             if i == 0:
                 handles.append(line)
@@ -178,9 +194,13 @@ def plot_classifier_sweep_multi_metric(
             ax.set_xscale("log")
             ax.set_xticks(unique_x)
             ax.set_xticklabels(
-                [str(int(x)) if isinstance(x, (int, float)) and float(x).is_integer() else str(x)
-                 for x in unique_x],
-                rotation=45, ha="right", fontsize=8,
+                [
+                    str(int(x)) if isinstance(x, (int, float)) and float(x).is_integer() else str(x)
+                    for x in unique_x
+                ],
+                rotation=45,
+                ha="right",
+                fontsize=8,
             )
             ax.minorticks_off()
 
@@ -198,9 +218,13 @@ def plot_classifier_sweep_multi_metric(
 
     fig.suptitle(title, fontsize=13, y=1.00)
     fig.legend(
-        handles, labels, title=line_label or line_col,
-        loc="lower center", bbox_to_anchor=(0.5, -0.02),
-        ncol=min(len(line_values), 6), frameon=True,
+        handles,
+        labels,
+        title=line_label or line_col,
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.02),
+        ncol=min(len(line_values), 6),
+        frameon=True,
     )
     plt.tight_layout(rect=(0, 0.04, 1, 0.98))
 
@@ -232,8 +256,13 @@ def plot_per_class_sweep(
         x_vals = sub[x_col].values
         means = sub[metric].values
         ax.plot(
-            x_vals, means, marker="o", color=colors(color_idx),
-            label=class_name, linewidth=2, markersize=7,
+            x_vals,
+            means,
+            marker="o",
+            color=colors(color_idx),
+            label=class_name,
+            linewidth=2,
+            markersize=7,
         )
 
     if log_x:
@@ -242,7 +271,8 @@ def plot_per_class_sweep(
         ax.set_xticks(unique_x)
         ax.set_xticklabels(
             [str(int(x)) if float(x).is_integer() else f"{x:g}" for x in unique_x],
-            rotation=45, ha="right",
+            rotation=45,
+            ha="right",
         )
         ax.minorticks_off()
 
@@ -299,7 +329,8 @@ def plot_pca_variance_explained(
             f"{int(t * 100)}% → {idx} components",
             xy=(idx, t),
             xytext=(idx + len(cumvar) * 0.015, t - 0.04),
-            fontsize=9, color="dimgray",
+            fontsize=9,
+            color="dimgray",
         )
 
     ax.set_xlabel("Number of components")
@@ -348,10 +379,26 @@ def plot_scaling_impact(
     width = 0.38
 
     fig, ax = plt.subplots(figsize=(max(8, 1.2 * len(models)), 5))
-    ax.bar(x - width / 2, raw_means, width, yerr=raw_stds, capsize=4,
-           label="Raw", color="#5b8def", alpha=0.9)
-    ax.bar(x + width / 2, scaled_means, width, yerr=scaled_stds, capsize=4,
-           label="Scaled", color="#f29e4c", alpha=0.9)
+    ax.bar(
+        x - width / 2,
+        raw_means,
+        width,
+        yerr=raw_stds,
+        capsize=4,
+        label="Raw",
+        color="#5b8def",
+        alpha=0.9,
+    )
+    ax.bar(
+        x + width / 2,
+        scaled_means,
+        width,
+        yerr=scaled_stds,
+        capsize=4,
+        label="Scaled",
+        color="#f29e4c",
+        alpha=0.9,
+    )
 
     ax.set_xticks(x)
     ax.set_xticklabels([_display_name(m) for m in models], rotation=15, ha="right")
@@ -399,8 +446,13 @@ def plot_sweep(
         means = sub[mean_col].values
         color = colors(color_idx)
         ax.plot(
-            x_vals, means, marker="o", color=color,
-            label=_display_name(model_name), linewidth=2, markersize=7,
+            x_vals,
+            means,
+            marker="o",
+            color=color,
+            label=_display_name(model_name),
+            linewidth=2,
+            markersize=7,
         )
 
     if log_x:
@@ -410,7 +462,8 @@ def plot_sweep(
         ax.set_xticks(unique_x)
         ax.set_xticklabels(
             [str(int(x)) if float(x).is_integer() else f"{x:g}" for x in unique_x],
-            rotation=45, ha="right",
+            rotation=45,
+            ha="right",
         )
         ax.minorticks_off()
 

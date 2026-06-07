@@ -86,13 +86,15 @@ def run_final_evaluation(config_path: str | Path) -> dict[str, Any]:
         for encoded_label, class_name in enumerate(ctx.class_names):
             if str(encoded_label) in classification_report:
                 cls_metrics = classification_report[str(encoded_label)]
-                per_class_rows.append({
-                    "class": class_name,
-                    "precision": cls_metrics["precision"],
-                    "recall": cls_metrics["recall"],
-                    "f1_score": cls_metrics["f1-score"],
-                    "support": cls_metrics["support"],
-                })
+                per_class_rows.append(
+                    {
+                        "class": class_name,
+                        "precision": cls_metrics["precision"],
+                        "recall": cls_metrics["recall"],
+                        "f1_score": cls_metrics["f1-score"],
+                        "support": cls_metrics["support"],
+                    }
+                )
         per_class_path = ctx.output_dir / "per_class_metrics.csv"
         pd.DataFrame(per_class_rows).to_csv(per_class_path, index=False)
         print(f"  wrote {per_class_path}")
