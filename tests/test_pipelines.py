@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from data_science.models.pipelines import build_pipeline
-from data_science.models.registry import get_model_registry
-from data_science.utils.config import load_config
+from cml_bench.models.pipelines import build_pipeline
+from cml_bench.models.registry import get_model_registry
+from cml_bench.utils.config import load_config
 
 
 def _synthetic_xy(n_samples: int = 60, n_features: int = 12, n_classes: int = 2, seed: int = 0):

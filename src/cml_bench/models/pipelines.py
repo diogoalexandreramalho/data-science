@@ -3,7 +3,7 @@ from typing import Any
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
-from data_science.features.preprocessing import (
+from cml_bench.features.preprocessing import (
     build_feature_selector,
     build_pca_transformer,
     build_preprocessor,

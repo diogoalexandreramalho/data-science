@@ -20,12 +20,12 @@ from typing import Any
 import pandas as pd
 import yaml
 
-from data_science.data.datasets import DATASETS
-from data_science.data.sampling import create_balanced_sample
-from data_science.data.split import create_cv_strategy, create_train_test_split
-from data_science.evaluation.metrics import resolve_scoring
-from data_science.models.registry import get_model_registry
-from data_science.utils.config import load_config
+from cml_bench.data.datasets import DATASETS
+from cml_bench.data.sampling import create_balanced_sample
+from cml_bench.data.split import create_cv_strategy, create_train_test_split
+from cml_bench.evaluation.metrics import resolve_scoring
+from cml_bench.models.registry import get_model_registry
+from cml_bench.utils.config import load_config
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 HYPERPARAMS_PATH = REPO_ROOT / "configs" / "hyperparameters.yaml"

@@ -10,7 +10,7 @@ before running. For local-only runs without a W&B account, set
 
 Usage pattern in each pipeline stage:
 
-    from data_science.experiments import _wandb
+    from cml_bench.experiments import _wandb
 
     run = _wandb.init(ctx, stage_name="stage-1")
     try:

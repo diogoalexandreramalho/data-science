@@ -18,10 +18,10 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from data_science.experiments.final import run_final_evaluation
-from data_science.experiments.stage_1 import run_stage_1
-from data_science.experiments.stage_2 import run_stage_2
-from data_science.experiments.sweeps import run_sweeps
+from cml_bench.experiments.final import run_final_evaluation
+from cml_bench.experiments.stage_1 import run_stage_1
+from cml_bench.experiments.stage_2 import run_stage_2
+from cml_bench.experiments.sweeps import run_sweeps
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIGS = [

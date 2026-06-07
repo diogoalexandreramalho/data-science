@@ -17,9 +17,9 @@ from typing import Any
 import pandas as pd
 from sklearn.model_selection import GridSearchCV, cross_validate
 
-from data_science.experiments import _wandb
-from data_science.experiments._context import load_context, load_grids
-from data_science.models.pipelines import build_pipeline
+from cml_bench.experiments import _wandb
+from cml_bench.experiments._context import load_context, load_grids
+from cml_bench.models.pipelines import build_pipeline
 
 
 def run_stage_2(config_path: str | Path) -> pd.DataFrame:

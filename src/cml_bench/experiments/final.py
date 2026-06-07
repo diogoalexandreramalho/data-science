@@ -20,14 +20,14 @@ from typing import Any
 import joblib
 import pandas as pd
 
-from data_science.evaluation.metrics import (
+from cml_bench.evaluation.metrics import (
     evaluate_binary_classifier,
     evaluate_multiclass_classifier,
 )
-from data_science.evaluation.plots import plot_confusion_matrix
-from data_science.experiments import _wandb
-from data_science.experiments._context import load_context
-from data_science.models.pipelines import build_pipeline
+from cml_bench.evaluation.plots import plot_confusion_matrix
+from cml_bench.experiments import _wandb
+from cml_bench.experiments._context import load_context
+from cml_bench.models.pipelines import build_pipeline
 
 
 def _parse_params(param_str: Any) -> dict[str, Any]:

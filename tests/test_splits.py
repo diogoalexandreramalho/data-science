@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from data_science.data.split import create_cv_strategy, create_train_test_split
+from cml_bench.data.split import create_cv_strategy, create_train_test_split
 
 
 def _synthetic_patient_recordings(

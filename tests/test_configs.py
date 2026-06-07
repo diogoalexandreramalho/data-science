@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from data_science.utils.config import load_config
+from cml_bench.utils.config import load_config
 
 
 @pytest.mark.parametrize("config_name", ["parkinsons.yaml", "covertype.yaml"])

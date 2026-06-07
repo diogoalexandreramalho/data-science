@@ -26,16 +26,16 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 
-from data_science.evaluation.sweep_plots import (
+from cml_bench.evaluation.sweep_plots import (
     plot_classifier_sweep_multi_metric,
     plot_pca_variance_explained,
     plot_per_class_sweep,
     plot_scaling_impact,
     plot_sweep,
 )
-from data_science.experiments import _wandb
-from data_science.experiments._context import load_context
-from data_science.features.preprocessing import (
+from cml_bench.experiments import _wandb
+from cml_bench.experiments._context import load_context
+from cml_bench.features.preprocessing import (
     build_feature_selector,
     build_pca_transformer,
     build_preprocessor,

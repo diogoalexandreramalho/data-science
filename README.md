@@ -178,7 +178,7 @@ data-science/
 │   ├── report.tex                    # LaTeX source
 │   └── report.pdf                    # Built by `make report`
 │
-├── src/data_science/                 # The installable package
+├── src/cml_bench/                 # The installable package
 │   ├── main.py                       # CLI entry point (subcommands)
 │   ├── data/                         # Dataset loaders, splitters, samplers
 │   ├── features/                     # Scaling, feature selection, PCA builders
