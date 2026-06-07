@@ -64,7 +64,7 @@ models:
 
 wandb:
   enabled: true  # opt-in: set to true and `wandb login` (or set WANDB_API_KEY)
-  project: data-science
+  project: cml-bench
   entity: null    # null = uses your default W&B entity
 
 metrics:
