@@ -1,6 +1,6 @@
 # Reproducible Machine Learning Benchmark: Parkinson’s Disease and Forest Cover Type Classification
 
-[![CI](https://github.com/diogoalexandreramalho/data-science/actions/workflows/ci.yml/badge.svg)](https://github.com/diogoalexandreramalho/data-science/actions/workflows/ci.yml)
+[![CI](https://github.com/diogoalexandreramalho/classical-ml-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/diogoalexandreramalho/classical-ml-benchmark/actions/workflows/ci.yml)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 
 This repository presents a reproducible comparative study of machine learning models on two contrasting tabular classification tasks:

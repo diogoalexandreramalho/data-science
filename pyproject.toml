@@ -1,5 +1,5 @@
 [project]
-name = "data-science"
+name = "classical-ml-benchmark"
 version = "0.1.0"
 license = "MIT"
 license-files = ["LICENSE"]
